@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La Jugada · Análisis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0B1210;--panel:#0F1916;--panel2:#12201C;--deep:#0D1613;--line:#1C2925;--line2:#22312C;--text:#EAF2EE;--soft:#B9C8C1;--muted:#8FA39A;--lima:#C8F04A;--naranja:#FF8A3D;--gris:#9DB0A7}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;font-size:14px}
+a{color:var(--lima)}a:hover{color:#E2FF8A}
+h1,h2,h3{font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.4px;margin:0}
+button,input,select{font:inherit}
+input:focus-visible,button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(--lima);outline-offset:2px}
+.wrap{max-width:1500px;margin:0 auto;padding:24px clamp(16px,3vw,40px) 48px;display:flex;flex-direction:column;gap:24px}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:16px;justify-content:space-between}
+.marca{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--text)}
+.marca .logo{width:40px;height:40px;border-radius:12px;background:var(--lima);display:flex;align-items:center;justify-content:center}
+.marca b{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:26px;text-transform:uppercase}
+.card{border:1px solid var(--line);background:var(--panel);border-radius:24px;padding:22px}
+.hero{background:var(--panel2);border-color:var(--line2)}
+.hero h1{font-size:clamp(36px,5vw,56px);font-weight:800;line-height:.95}
+.hero h1 span{color:var(--lima)}
+.hero p{color:var(--soft);max-width:640px;line-height:1.55;margin:10px 0 0}
+.controles{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;margin-top:20px}
+.campo{display:flex;flex-direction:column;gap:6px}
+.campo span{font-size:12px;color:var(--muted);font-weight:500}
+.inp{min-height:44px;padding:0 14px;border:1px solid var(--line2);border-radius:12px;background:var(--bg);color:var(--text);outline:none}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--line2);background:transparent;color:var(--soft);font-weight:600;cursor:pointer;transition:border-color .18s,background .18s,color .18s}
+.chip:hover{border-color:var(--lima);color:var(--text)}
+.chip.on{background:var(--lima);border-color:var(--lima);color:var(--bg)}
+.btn{min-height:44px;padding:0 20px;border-radius:12px;border:0;background:var(--lima);color:var(--bg);font-weight:700;cursor:pointer}
+.ghost{min-height:44px;padding:0 16px;border-radius:12px;border:1px solid var(--line2);background:transparent;color:var(--soft);font-weight:600;cursor:pointer}
+.ghost:hover{border-color:var(--lima);color:var(--text)}
+.aviso{padding:14px 16px;border-radius:12px;border:1px solid rgba(255,138,61,.4);background:rgba(255,138,61,.08);color:#FFD2B3;line-height:1.5}
+.ok{border-color:rgba(200,240,74,.35);background:rgba(200,240,74,.08);color:#DFF59A}
+.nota{font-size:12px;color:var(--muted);line-height:1.5;margin:0}
+.liga-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin-bottom:14px}
+.liga-head h2{font-size:26px;font-weight:700}
+.tabla-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:16px}
+table{border-collapse:collapse;width:100%;min-width:1100px;font-variant-numeric:tabular-nums}
+th,td{padding:10px 10px;text-align:center;white-space:nowrap;border-bottom:1px solid #16221E}
+thead th{font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);background:var(--deep);cursor:pointer;user-select:none}
+thead tr.grupo th{cursor:default;color:var(--lima);border-bottom:1px solid var(--line)}
+thead th.orden{color:var(--text)}
+tbody tr:hover{background:rgba(234,242,238,.035)}
+td.eq,th.eq{text-align:left;position:sticky;left:0;background:var(--panel);z-index:1}
+thead th.eq{background:var(--deep)}
+td.eq{font-weight:600;min-width:180px}
+.eq img{width:22px;height:22px;object-fit:contain;vertical-align:middle;margin-right:8px}
+.sep{border-left:1px solid var(--line)}
+.g{color:var(--lima);font-weight:700}.e{color:var(--gris);font-weight:700}.p{color:var(--naranja);font-weight:700}
+.zona{display:inline-block;padding:3px 8px;border-radius:6px;background:#16251F;color:var(--soft);font-size:12px;font-weight:600}
+.les{display:inline-block;min-width:28px;padding:3px 8px;border-radius:999px;font-weight:700;font-size:12px}
+.les.si{background:var(--naranja);color:var(--bg)}.les.no{background:#16251F;color:var(--muted)}
+.semana{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-top:12px}
+.partido{border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:var(--deep);color:var(--text);text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:6px;transition:border-color .2s,transform .2s}
+.partido:hover,.partido.on{border-color:var(--lima);transform:translateY(-2px)}
+.partido small{color:var(--muted);font-size:11px;letter-spacing:1px;text-transform:uppercase}
+.partido b{font-weight:600}
+.manual{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-top:14px}
+.manual select{min-width:200px}
+.h2h{margin-top:16px;border:1px solid var(--line2);border-radius:16px;padding:18px;background:var(--panel2)}
+.h2h-marcador{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;text-align:center}
+.h2h-marcador .num{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:44px;line-height:1}
+.h2h-marcador .lbl{font-size:12px;color:var(--muted)}
+.h2h ul{list-style:none;padding:0;margin:14px 0 0;display:flex;flex-direction:column;gap:6px}
+.h2h li{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--soft);padding:8px 10px;border-radius:10px;background:var(--deep)}
+.cargando{color:var(--muted);padding:20px 0}
+@media (max-width:600px){.manual select{min-width:0;width:100%}.campo{width:100%}.campo .inp{width:100%}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="marca" href="Main.dc.html">
+      <span class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B1210" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7l4 3-1.5 4.5h-5L8 10z"></path></svg></span>
+      <b>La Jugada</b>
+    </a>
+    <a href="Main.dc.html" class="ghost" style="display:inline-flex;align-items:center;text-decoration:none">← Volver al inicio</a>
+  </div>
+
+  <section class="card hero">
+    <h1>Análisis <span>por liga</span></h1>
+    <p>Elige las ligas y genera una tabla por cada una: últimos 15 partidos (local, visitante o cancha neutral), goles, resultados de local y de visita, altitud, zona y lesionados. Abajo puedes elegir el partido de la semana para ver el historial directo.</p>
+    <div class="controles">
+      <label class="campo">
+        <span>Clave de API-Football (se guarda solo en este navegador)</span>
+        <input id="clave" class="inp" type="password" placeholder="Pega tu clave aquí" autocomplete="off" style="width:300px">
+      </label>
+      <label class="campo">
+        <span>Temporada (vacío = actual)</span>
+        <input id="temporada" class="inp" type="number" min="2000" max="2100" placeholder="Auto" style="width:120px">
+      </label>
+      <button id="guardar" class="btn">Generar tablas</button>
+      <button id="refrescar" class="ghost" title="Borra los datos guardados y vuelve a pedirlos a la API">Actualizar datos</button>
+    </div>
+    <div class="controles">
+      <div class="campo">
+        <span>Ligas</span>
+        <div id="chips" class="chips"></div>
+      </div>
+      <label class="campo">
+        <span>Agregar liga por ID de API-Football</span>
+        <span style="display:flex;gap:8px">
+          <input id="nuevaLiga" class="inp" type="number" min="1" placeholder="Ej. 262 (Liga MX)" style="width:180px">
+          <button id="agregarLiga" class="ghost">Agregar</button>
+        </span>
+      </label>
+    </div>
+    <p id="estado" class="nota" style="margin-top:14px"></p>
+  </section>
+
+  <div id="ligas" style="display:flex;flex-direction:column;gap:24px"></div>
+
+  <section class="card">
+    <h2 style="font-size:24px">Partido de la semana</h2>
+    <p class="nota" style="margin-top:6px">Toca un partido de los próximos 7 días o elige dos equipos para ver cuántas veces ganó, empató o perdió cada uno contra el otro.</p>
+    <div id="semana" class="semana"></div>
+    <div class="manual">
+      <label class="campo"><span>Equipo A</span><select id="eqA" class="inp"></select></label>
+      <label class="campo"><span>Equipo B</span><select id="eqB" class="inp"></select></label>
+      <button id="verH2H" class="btn">Ver historial</button>
+    </div>
+    <div id="h2h"></div>
+  </section>
+
+  <p class="nota">Datos de partidos, goles y lesionados: API-Football (plan gratis: 100 consultas al día; se guardan 12 h en el navegador). Altitudes y zonas: archivo <code>data/equipos.js</code>, valores aproximados. "Neutral" = el partido no se jugó en el estadio de ninguno de los dos equipos.</p>
+</div>
+<script src="data/equipos.js"></script>
+<script src="js/analisis.js"></script>
+</body>
+</html>

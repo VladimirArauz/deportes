@@ -66,7 +66,7 @@ input:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid #C8F0
     <nav aria-label="Principal" style="display: flex; flex-direction: column; gap: 4px">
       <span style="font-size: 11px; font-weight: 600; letter-spacing: 1.4px; text-transform: uppercase; color: #8FA39A; padding: 0 12px 8px">Menú</span>
       <sc-for list="{{nav}}" as="item" hint-placeholder-count="8">
-        <a href="#top" onClick="{{item.go}}" class="navi {{item.cls}}" style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 10px; text-decoration: none; font-size: 14px; font-weight: 500">
+        <a href="{{item.href}}" onClick="{{item.go}}" class="navi {{item.cls}}" style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 10px; text-decoration: none; font-size: 14px; font-weight: 500">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{item.icon}}"></path></svg>
           <span style="flex: 1">{{item.label}}</span>
           <sc-if value="{{item.badge}}" hint-placeholder-val="{{ false }}">
@@ -389,10 +389,11 @@ class Component extends DCLogic {
     const navDefs = [
       ['Inicio', 'M3 11l9-8 9 8M5 10v10h14V10'], ['Jornada actual', 'M3 5h18v14H3zM3 10h18M8 3v4M16 3v4', 'Abierta'],
       ['Mis quinielas', 'M9 4h10v16H5V8zM9 4v4H5M9 13h6M9 17h4'], ['Ligas privadas', 'M17 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M10 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8M21 20v-2a4 4 0 0 0-3-3.9M16 2.1a4 4 0 0 1 0 7.8'],
+      ['Análisis', 'M3 3v18h18M7 15l4-4 3 3 6-6', 'Nuevo', 'analisis.html'],
       ['Ranking', 'M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3'], ['En vivo', 'M2 12h4l3-8 4 16 3-8h6', '3'],
       ['Resultados', 'M4 20V10M10 20V4M16 20v-7M22 20H2'], ['Ayuda', 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01']
     ];
-    const nav = navDefs.map((d, i) => ({ label: d[0], icon: d[1], badge: d[2] || false, cls: this.state.nav === i ? 'navon' : 'navoff', go: () => this.setState({ nav: i }) }));
+    const nav = navDefs.map((d, i) => ({ label: d[0], icon: d[1], badge: d[2] || false, href: d[3] || '#top', cls: this.state.nav === i ? 'navon' : 'navoff', go: () => this.setState({ nav: i }) }));
     const T = [['72’', 'Everton', '1 – 2', 'Chelsea'], ['55’', 'Valencia', '0 – 0', 'Athletic'], ['Final', 'Grêmio', '2 – 1', 'Cruzeiro'], ['38’', 'Racing', '1 – 0', 'Independiente'], ['HT', 'Houston', '1 – 1', 'Dallas']];
     const tk = T.map((t) => ({ min: t[0], home: t[1], score: t[2], away: t[3] }));
     const ticker = tk.concat(tk, tk, tk);
