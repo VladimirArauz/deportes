@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Quinielas · Jornada</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0B1210}
+a{color:#C8F04A}a:hover{color:#E2FF8A}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes pop{0%{transform:scale(.82)}60%{transform:scale(1.1)}100%{transform:scale(1)}}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,138,61,.55)}70%{box-shadow:0 0 0 9px rgba(255,138,61,0)}100%{box-shadow:0 0 0 0 rgba(255,138,61,0)}}
+@keyframes marq{to{transform:translateX(-50%)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes drift{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes sheen{0%{transform:translateX(-120%)}60%,100%{transform:translateX(220%)}}
+@keyframes tick{0%{opacity:.35}100%{opacity:1}}
+.fade{opacity:0;animation:fadeUp .75s cubic-bezier(.2,.7,.2,1) forwards}
+.lift{transition:transform .3s ease,border-color .3s ease,background .3s ease}
+.lift:hover{transform:translateY(-3px);border-color:rgba(200,240,74,.35)}
+.navi{transition:background .2s ease,color .2s ease,transform .2s ease}
+.navi:hover{background:rgba(234,242,238,.06);color:#EAF2EE;transform:translateX(3px)}
+.navon{background:rgba(200,240,74,.12);color:#C8F04A}
+.navoff{background:transparent;color:#9DB0A7}
+.row{transition:background .25s ease}
+.row:hover{background:rgba(234,242,238,.035)}
+.pick{width:44px;height:44px;border-radius:10px;border:1px solid #2A3833;background:transparent;color:#B9C8C1;font:600 15px Inter,sans-serif;cursor:pointer;transition:border-color .18s ease,background .18s ease,color .18s ease}
+.pick:hover{border-color:#C8F04A;color:#EAF2EE}
+.pick.on{background:#C8F04A;border-color:#C8F04A;color:#0B1210;animation:pop .3s ease}
+.btn{transition:transform .2s ease,background .2s ease,box-shadow .3s ease}
+.btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px -10px rgba(200,240,74,.6)}
+.ghost{transition:border-color .2s ease,color .2s ease}
+.ghost:hover{border-color:#C8F04A;color:#EAF2EE}
+.live{animation:pulse 1.8s ease-out infinite}
+.ticker{animation:marq 48s linear infinite}
+.ticker:hover{animation-play-state:paused}
+.ring{animation:spin 60s linear infinite;transform-origin:center}
+.ball{animation:drift 6s ease-in-out infinite}
+.sheen{animation:sheen 5s ease-in-out infinite}
+.secs{animation:tick 1s ease-out infinite}
+.bar{transition:width .6s cubic-bezier(.2,.7,.2,1)}
+input:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid #C8F04A;outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.fade{opacity:1}}
+</style>
+</helmet>
+
+<div style="min-height: 100vh; background: #0B1210; color: #EAF2EE; font-family: Inter, system-ui, sans-serif; display: flex; flex-wrap: wrap; align-items: stretch">
+
+  <!-- ============ SIDEBAR (navbar izquierdo) ============ -->
+  <aside style="flex: 1 1 248px; max-width: 100%; box-sizing: border-box; background: #0F1916; border-right: 1px solid #1C2925; padding: 28px 18px; display: flex; flex-direction: column; gap: 28px">
+    <a href="#top" style="display: flex; align-items: center; gap: 12px; text-decoration: none; color: #EAF2EE; padding: 0 8px">
+      <span class="ball" style="width: 40px; height: 40px; border-radius: 12px; background: #C8F04A; display: flex; align-items: center; justify-content: center">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B1210" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7l4 3-1.5 4.5h-5L8 10z"></path><path d="M12 3v4M21 10l-5 0M3 10h5M7.5 19.5l2-5M16.5 19.5l-2-5"></path></svg>
+      </span>
+      <span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 26px; letter-spacing: .5px; text-transform: uppercase">La Jugada</span>
+    </a>
+
+    <nav aria-label="Principal" style="display: flex; flex-direction: column; gap: 4px">
+      <span style="font-size: 11px; font-weight: 600; letter-spacing: 1.4px; text-transform: uppercase; color: #8FA39A; padding: 0 12px 8px">Menú</span>
+      <sc-for list="{{nav}}" as="item" hint-placeholder-count="8">
+        <a href="#top" onClick="{{item.go}}" class="navi {{item.cls}}" style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 10px; text-decoration: none; font-size: 14px; font-weight: 500">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{item.icon}}"></path></svg>
+          <span style="flex: 1">{{item.label}}</span>
+          <sc-if value="{{item.badge}}" hint-placeholder-val="{{ false }}">
+            <span style="font-size: 11px; font-weight: 700; background: #FF8A3D; color: #0B1210; border-radius: 999px; padding: 2px 8px">{{item.badge}}</span>
+          </sc-if>
+        </a>
+      </sc-for>
+    </nav>
+
+    <div class="lift" style="border: 1px solid #22312C; border-radius: 16px; padding: 18px; background: #12201C; display: flex; flex-direction: column; gap: 10px; position: relative; overflow: hidden">
+      <span class="sheen" style="position: absolute; top: 0; bottom: 0; left: 0; width: 40%; background: linear-gradient(100deg, transparent, rgba(200,240,74,.08), transparent); pointer-events: none"></span>
+      <span style="font-size: 12px; color: #8FA39A; font-weight: 500">Tu saldo</span>
+      <span style="font-family: 'Barlow Condensed', sans-serif; font-size: 34px; font-weight: 700; line-height: 1">[SALDO]</span>
+      <a href="#boleta" class="btn" style="margin-top: 6px; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; background: #C8F04A; color: #0B1210; border-radius: 10px; font-weight: 700; font-size: 14px; text-decoration: none">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+        Crear quiniela
+      </a>
+    </div>
+
+    <div style="margin-top: auto; display: flex; align-items: center; gap: 12px; padding: 12px; border-top: 1px solid #1C2925">
+      <span style="width: 40px; height: 40px; border-radius: 50%; background: #1F3A5F; color: #CFE3FF; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px">AM</span>
+      <span style="display: flex; flex-direction: column; flex: 1; min-width: 0">
+        <span style="font-size: 14px; font-weight: 600">Axel M.</span>
+        <span style="font-size: 12px; color: #8FA39A">Nivel Crack · 1,240 pts</span>
+      </span>
+      <button aria-label="Ajustes de cuenta" class="ghost" style="width: 44px; height: 44px; border-radius: 10px; border: 1px solid #22312C; background: transparent; color: #9DB0A7; cursor: pointer; display: flex; align-items: center; justify-content: center">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3.3 14H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 9 4.6V4a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"></path></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ============ CONTENIDO ============ -->
+  <main id="top" style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; display: flex; flex-direction: column">
+
+    <!-- Ticker en vivo -->
+    <div style="border-bottom: 1px solid #1C2925; background: #0D1613; display: flex; align-items: center; overflow: hidden; min-height: 44px">
+      <span style="flex: none; display: flex; align-items: center; gap: 8px; padding: 0 18px; height: 44px; background: #FF8A3D; color: #0B1210; font-weight: 700; font-size: 12px; letter-spacing: 1px; text-transform: uppercase">
+        <span class="live" style="width: 8px; height: 8px; border-radius: 50%; background: #0B1210"></span>En vivo
+      </span>
+      <div style="flex: 1; overflow: hidden">
+        <div class="ticker" style="display: flex; gap: 40px; width: max-content; padding-left: 24px">
+          <sc-for list="{{ticker}}" as="t" hint-placeholder-count="10">
+            <span style="display: flex; align-items: center; gap: 10px; font-size: 13px; white-space: nowrap; color: #B9C8C1">
+              <span style="color: #8FA39A; font-size: 11px; font-weight: 600">{{t.min}}</span>
+              <span>{{t.home}}</span>
+              <span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 17px; color: #EAF2EE">{{t.score}}</span>
+              <span>{{t.away}}</span>
+            </span>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top bar -->
+    <header style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 24px clamp(16px, 3vw, 40px) 0">
+      <div class="fade" style="flex: 1 1 280px; display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 13px; color: #8FA39A">Jueves 22 de octubre</span>
+        <h1 style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 36px; letter-spacing: .3px">Hola, Axel. Arma tu jugada.</h1>
+      </div>
+      <label class="fade" style="animation-delay: .08s; flex: 0 1 300px; display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 14px; border: 1px solid #22312C; border-radius: 12px; background: #0F1916; color: #8FA39A">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+        <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Buscar</span>
+        <input type="search" placeholder="Buscar equipo, liga o quiniela" style="flex: 1; min-width: 0; background: transparent; border: 0; outline: none; color: #EAF2EE; font: 14px Inter, sans-serif">
+      </label>
+      <button aria-label="Notificaciones" class="ghost fade" style="animation-delay: .12s; position: relative; width: 44px; height: 44px; border-radius: 12px; border: 1px solid #22312C; background: #0F1916; color: #B9C8C1; cursor: pointer; display: flex; align-items: center; justify-content: center">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg>
+        <span class="live" style="position: absolute; top: 10px; right: 11px; width: 8px; height: 8px; border-radius: 50%; background: #FF8A3D"></span>
+      </button>
+    </header>
+
+    <div style="padding: 24px clamp(16px, 3vw, 40px) 48px; display: flex; flex-direction: column; gap: 24px">
+
+      <!-- HERO: jornada + countdown + bolsa -->
+      <section class="fade" style="animation-delay: .15s; position: relative; overflow: hidden; border-radius: 24px; background: #12201C; border: 1px solid #22312C; padding: clamp(24px, 3vw, 40px); display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-end">
+        <svg class="ring" width="520" height="520" viewBox="0 0 520 520" fill="none" aria-hidden="true" style="position: absolute; right: -140px; top: -170px; opacity: .5">
+          <circle cx="260" cy="260" r="250" stroke="#22312C" stroke-width="1.5"></circle>
+          <circle cx="260" cy="260" r="180" stroke="#22312C" stroke-width="1.5" stroke-dasharray="6 10"></circle>
+          <circle cx="260" cy="260" r="90" stroke="#2C3E37" stroke-width="1.5"></circle>
+          <path d="M10 260h500M260 10v500" stroke="#1C2925" stroke-width="1.5"></path>
+          <circle cx="260" cy="10" r="5" fill="#C8F04A"></circle>
+        </svg>
+
+        <div style="position: relative; flex: 1 1 340px; display: flex; flex-direction: column; gap: 14px">
+          <span style="align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #C8F04A; border: 1px solid rgba(200,240,74,.35); border-radius: 999px; padding: 6px 12px">
+            <span class="live" style="width: 7px; height: 7px; border-radius: 50%; background: #C8F04A"></span>Jornada abierta
+          </span>
+          <h2 style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: clamp(44px, 6vw, 76px); line-height: .92; text-transform: uppercase">Progol 2355<br><span style="color: #C8F04A">14 partidos.</span> Una boleta.</h2>
+          <p style="margin: 0; max-width: 460px; color: #B9C8C1; font-size: 15px; line-height: 1.55">Elige Local, Empate o Visita en cada partido. Solo cuenta el marcador a los 90 minutos: sin tiempos extra ni penales.</p>
+        </div>
+
+        <div style="position: relative; flex: 0 1 auto; display: flex; flex-direction: column; gap: 18px">
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <span style="font-size: 12px; color: #8FA39A; font-weight: 500">La jornada cierra en</span>
+            <div style="display: flex; gap: 10px">
+              <sc-for list="{{clock}}" as="c" hint-placeholder-count="4">
+                <div style="width: 72px; padding: 10px 0; border-radius: 14px; background: #0B1210; border: 1px solid #22312C; display: flex; flex-direction: column; align-items: center; gap: 2px">
+                  <span class="{{c.cls}}" style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 34px; line-height: 1; font-variant-numeric: tabular-nums">{{c.v}}</span>
+                  <span style="font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: #8FA39A">{{c.l}}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap">
+            <div style="flex: 1 1 140px; padding: 14px 16px; border-radius: 14px; background: #C8F04A; color: #0B1210">
+              <span style="display: block; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase">Bolsa acumulada</span>
+              <span style="display: block; font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 30px; line-height: 1.1">[MONTO BOLSA]</span>
+            </div>
+            <div style="flex: 1 1 120px; padding: 14px 16px; border-radius: 14px; border: 1px solid #22312C; background: #0B1210">
+              <span style="display: block; font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #8FA39A">Participantes</span>
+              <span style="display: block; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 30px; line-height: 1.1">[N.º]</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Stat strip -->
+      <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px">
+        <sc-for list="{{stats}}" as="s" hint-placeholder-count="4">
+          <div class="lift fade" style="{{s.delay}}; border: 1px solid #1C2925; background: #0F1916; border-radius: 18px; padding: 18px 20px; display: flex; align-items: center; gap: 14px">
+            <span style="width: 44px; height: 44px; border-radius: 12px; background: #16251F; color: #C8F04A; display: flex; align-items: center; justify-content: center; flex: none">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{s.icon}}"></path></svg>
+            </span>
+            <span style="display: flex; flex-direction: column; gap: 2px">
+              <span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 26px; line-height: 1">{{s.v}}</span>
+              <span style="font-size: 12px; color: #8FA39A">{{s.l}}</span>
+            </span>
+          </div>
+        </sc-for>
+      </section>
+
+      <!-- Boleta + rail -->
+      <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+
+        <!-- BOLETA -->
+        <section id="boleta" class="fade" style="animation-delay: .35s; flex: 999 1 560px; min-width: 0; border: 1px solid #1C2925; background: #0F1916; border-radius: 24px; overflow: hidden">
+          <div style="padding: 22px 24px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; border-bottom: 1px solid #1C2925">
+            <div style="display: flex; flex-direction: column; gap: 4px">
+              <h3 style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 26px; text-transform: uppercase; letter-spacing: .4px">Tu boleta</h3>
+              <span style="font-size: 13px; color: #8FA39A">{{count}} de 14 pronosticados</span>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap">
+              <button onClick="{{random}}" class="ghost" style="min-height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid #22312C; background: transparent; color: #B9C8C1; font: 600 13px Inter, sans-serif; cursor: pointer; display: flex; align-items: center; gap: 8px">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"></path></svg>
+                Al azar
+              </button>
+              <button onClick="{{clear}}" class="ghost" style="min-height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid #22312C; background: transparent; color: #B9C8C1; font: 600 13px Inter, sans-serif; cursor: pointer">Limpiar</button>
+            </div>
+          </div>
+          <div style="height: 4px; background: #16251F">
+            <div class="bar" style="height: 4px; width: {{pct}}%; background: #C8F04A"></div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 36px minmax(0, 1fr) auto minmax(0, 1fr); gap: 0 14px; padding: 12px 24px; font-size: 11px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: #8FA39A">
+            <span>#</span><span>Local</span><span style="display: flex; gap: 8px"><span style="width: 44px; text-align: center">L</span><span style="width: 44px; text-align: center">E</span><span style="width: 44px; text-align: center">V</span></span><span style="text-align: right">Visita</span>
+          </div>
+
+          <sc-for list="{{matches}}" as="m" hint-placeholder-count="14">
+            <div class="row fade" style="{{m.delay}}; display: grid; grid-template-columns: 36px minmax(0, 1fr) auto minmax(0, 1fr); gap: 14px; align-items: center; padding: 12px 24px; border-top: 1px solid #16221E">
+              <span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 18px; color: #8FA39A">{{m.n}}</span>
+              <div style="display: flex; align-items: center; gap: 10px; min-width: 0">
+                <span style="flex: none; width: 34px; height: 34px; border-radius: 50%; background: {{m.hc}}; color: #0B1210; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center">{{m.hi}}</span>
+                <span style="display: flex; flex-direction: column; gap: 3px; min-width: 0">
+                  <span style="font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{m.home}}</span>
+                  <span style="display: flex; gap: 3px">
+                    <sc-for list="{{m.hf}}" as="f" hint-placeholder-count="5"><span title="{{f.t}}" style="width: 14px; height: 14px; border-radius: 4px; background: {{f.bg}}; color: #0B1210; font-size: 8px; font-weight: 800; display: flex; align-items: center; justify-content: center">{{f.k}}</span></sc-for>
+                  </span>
+                </span>
+              </div>
+              <div role="group" aria-label="Pronóstico {{m.home}} contra {{m.away}}" style="display: flex; gap: 8px">
+                <sc-for list="{{m.opts}}" as="o" hint-placeholder-count="3">
+                  <button onClick="{{o.pick}}" class="{{o.cls}}" aria-pressed="{{o.pressed}}" aria-label="{{o.aria}}">{{o.k}}</button>
+                </sc-for>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px; min-width: 0; justify-content: flex-end; text-align: right">
+                <span style="display: flex; flex-direction: column; gap: 3px; min-width: 0; align-items: flex-end">
+                  <span style="font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%">{{m.away}}</span>
+                  <span style="display: flex; gap: 3px">
+                    <sc-for list="{{m.af}}" as="f" hint-placeholder-count="5"><span title="{{f.t}}" style="width: 14px; height: 14px; border-radius: 4px; background: {{f.bg}}; color: #0B1210; font-size: 8px; font-weight: 800; display: flex; align-items: center; justify-content: center">{{f.k}}</span></sc-for>
+                  </span>
+                </span>
+                <span style="flex: none; width: 34px; height: 34px; border-radius: 50%; background: {{m.ac}}; color: #0B1210; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center">{{m.ai}}</span>
+              </div>
+            </div>
+          </sc-for>
+
+          <div style="padding: 20px 24px; border-top: 1px solid #1C2925; background: #0D1613; display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between">
+            <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; min-height: 44px">
+              <input type="checkbox" checked="{{revancha}}" onChange="{{toggleRev}}" style="width: 20px; height: 20px; accent-color: #C8F04A; margin: 0">
+              <span style="display: flex; flex-direction: column">
+                <span style="font-size: 14px; font-weight: 600">Agregar Revancha</span>
+                <span style="font-size: 12px; color: #8FA39A">Progol $15 · Revancha $5 · Ambos $20</span>
+              </span>
+            </label>
+            <div style="display: flex; align-items: center; gap: 18px">
+              <span style="display: flex; flex-direction: column; align-items: flex-end">
+                <span style="font-size: 12px; color: #8FA39A">Total</span>
+                <span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 30px; line-height: 1">${{total}}</span>
+              </span>
+              <button onClick="{{submit}}" class="btn" style="min-height: 48px; padding: 0 26px; border-radius: 12px; border: 0; background: {{cta.bg}}; color: {{cta.fg}}; font: 700 15px Inter, sans-serif; cursor: pointer">{{cta.label}}</button>
+            </div>
+          </div>
+          <sc-if value="{{sent}}" hint-placeholder-val="{{ false }}">
+            <div class="fade" style="margin: 0 24px 20px; padding: 14px 16px; border-radius: 12px; background: rgba(200,240,74,.1); border: 1px solid rgba(200,240,74,.35); color: #DFF59A; font-size: 14px; display: flex; align-items: center; gap: 10px">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"></path></svg>
+              Quiniela registrada. Te avisaremos con cada gol.
+            </div>
+          </sc-if>
+        </section>
+
+        <!-- RAIL -->
+        <div style="flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 24px">
+
+          <!-- Ranking -->
+          <section class="fade" style="animation-delay: .45s; border: 1px solid #1C2925; background: #0F1916; border-radius: 24px; padding: 22px">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px">
+              <h3 style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 22px; text-transform: uppercase">Liga · La Oficina</h3>
+              <a href="#top" style="font-size: 13px; font-weight: 600; text-decoration: none">Ver todo</a>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <sc-for list="{{rank}}" as="r" hint-placeholder-count="5">
+                <div class="row" style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: {{r.bg}}">
+                  <span style="width: 26px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 20px; color: {{r.pc}}">{{r.pos}}</span>
+                  <span style="width: 32px; height: 32px; border-radius: 50%; background: #1F3A5F; color: #CFE3FF; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">{{r.ini}}</span>
+                  <span style="flex: 1; font-size: 14px; font-weight: 500">{{r.name}}</span>
+                  <span style="font-size: 11px; font-weight: 700; color: {{r.dc}}">{{r.delta}}</span>
+                  <span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 18px; min-width: 44px; text-align: right">{{r.pts}}</span>
+                </div>
+              </sc-for>
+            </div>
+          </section>
+
+          <!-- En vivo -->
+          <section class="fade" style="animation-delay: .55s; border: 1px solid #1C2925; background: #0F1916; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+            <h3 style="margin: 0 0 4px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 22px; text-transform: uppercase; display: flex; align-items: center; gap: 10px">
+              <span class="live" style="width: 9px; height: 9px; border-radius: 50%; background: #FF8A3D"></span>Ahora mismo
+            </h3>
+            <sc-for list="{{live}}" as="l" hint-placeholder-count="3">
+              <div class="lift" style="border: 1px solid #1C2925; border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; background: #0D1613">
+                <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #8FA39A">
+                  <span>{{l.lg}}</span><span style="color: #FF8A3D">{{l.min}}</span>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px">
+                  <span style="font-size: 14px; font-weight: 600; flex: 1">{{l.home}}</span>
+                  <span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 26px">{{l.score}}</span>
+                  <span style="font-size: 14px; font-weight: 600; flex: 1; text-align: right">{{l.away}}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #B9C8C1">
+                  <span style="padding: 3px 8px; border-radius: 6px; background: {{l.tagbg}}; color: #0B1210; font-weight: 700">{{l.tag}}</span>
+                  Tu pronóstico: {{l.mine}}
+                </div>
+              </div>
+            </sc-for>
+          </section>
+
+          <!-- Puntos -->
+          <section class="fade" style="animation-delay: .65s; border: 1px solid #1C2925; background: #0F1916; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+            <h3 style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 22px; text-transform: uppercase">Cómo se puntúa</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #B9C8C1; padding: 8px 0; border-bottom: 1px solid #1C2925"><span>Acierto L / E / V</span><span style="font-weight: 700; color: #EAF2EE">[PTS]</span></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #B9C8C1; padding: 8px 0; border-bottom: 1px solid #1C2925"><span>Marcador exacto</span><span style="font-weight: 700; color: #EAF2EE">[PTS]</span></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #B9C8C1; padding: 8px 0"><span>Boleta perfecta (14/14)</span><span style="font-weight: 700; color: #C8F04A">[PREMIO]</span></div>
+            <p style="margin: 0; font-size: 12px; color: #8FA39A; line-height: 1.5">Puedes cambiar tus pronósticos hasta el silbatazo inicial. Los de tus rivales se revelan cuando arranca cada partido.</p>
+          </section>
+        </div>
+      </div>
+
+      <footer style="display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; padding-top: 24px; border-top: 1px solid #1C2925; font-size: 12px; color: #8FA39A">
+        <span style="display: flex; align-items: center; gap: 10px"><span style="border: 1px solid #FF8A3D; color: #FF8A3D; border-radius: 6px; padding: 2px 6px; font-weight: 700">+18</span>Juega con responsabilidad. Las quinielas son entretenimiento, no una fuente de ingresos.</span>
+        <span style="display: flex; gap: 18px"><a href="#top" style="color: #B9C8C1">Reglamento</a><a href="#top" style="color: #B9C8C1">Privacidad</a><a href="#top" style="color: #B9C8C1">Ayuda</a></span>
+      </footer>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1960}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { picks: { 0: 'V', 1: 'L', 4: 'V' }, revancha: true, sent: false, nav: 0, secs: 1 * 86400 + 14 * 3600 + 32 * 60 + 10 };
+  }
+  componentDidMount() {
+    this.timer = setInterval(() => this.setState({ secs: Math.max(0, this.state.secs - 1) }), 1000);
+  }
+  componentWillUnmount() { clearInterval(this.timer); }
+  setPick(i, k) {
+    const picks = Object.assign({}, this.state.picks);
+    if (picks[i] === k) { delete picks[i]; } else { picks[i] = k; }
+    this.setState({ picks: picks, sent: false });
+  }
+  renderVals() {
+    const M = [
+      ['Atlante', 'Pumas', 'México'], ['Santos Laguna', 'Querétaro', 'México'], ['León', 'Águilas', 'México'], ['San Luis', 'Juárez', 'México'],
+      ['Valencia', 'Athletic Bilbao', 'España'], ['Everton', 'Chelsea', 'Inglaterra'], ['Elversberg', 'Augsburgo', 'Alemania'], ['Paris FC', 'Rennes', 'Francia'],
+      ['Paranaense', 'Palmeiras', 'Brasil'], ['Grêmio', 'Cruzeiro', 'Brasil'], ['NY City', 'Los Angeles', 'MLS'], ['Houston', 'Dallas', 'MLS'],
+      ['Dinamo Moscú', 'CSKA', 'Rusia'], ['Racing', 'Independiente', 'Argentina']
+    ];
+    const palette = ['#C8F04A', '#FF8A3D', '#7CC4FF', '#F2D06B', '#B9A4FF', '#6FE0C0', '#FF9DB5'];
+    const hash = (s) => { let h = 0; for (let c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; };
+    const ini = (s) => s.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+    const FORM = { G: ['#C8F04A', 'Ganó'], E: ['#9DB0A7', 'Empató'], P: ['#FF8A3D', 'Perdió'] };
+    const form = (s) => { let h = hash(s); const out = []; for (let j = 0; j < 5; j++) { const k = 'GEP'[h % 3]; h = Math.floor(h / 3) + 7; out.push({ k: k, bg: FORM[k][0], t: FORM[k][1] }); } return out; };
+    const picks = this.state.picks;
+    const names = { L: 'Local', E: 'Empate', V: 'Visita' };
+    const matches = M.map((m, i) => ({
+      n: String(i + 1).padStart(2, '0'), home: m[0], away: m[1], lg: m[2],
+      hi: ini(m[0]), ai: ini(m[1]), hc: palette[hash(m[0]) % 7], ac: palette[hash(m[1]) % 7],
+      hf: form(m[0]), af: form(m[1]),
+      delay: 'animation-delay: ' + (0.4 + i * 0.045).toFixed(2) + 's',
+      opts: ['L', 'E', 'V'].map((k) => ({ k: k, cls: picks[i] === k ? 'pick on' : 'pick', pressed: picks[i] === k ? 'true' : 'false', aria: names[k] + ': ' + m[0] + ' vs ' + m[1], pick: () => this.setPick(i, k) }))
+    }));
+    const count = Object.keys(picks).length;
+    const done = count === 14;
+    const s = this.state.secs;
+    const pad = (n) => String(n).padStart(2, '0');
+    const clock = [
+      { v: pad(Math.floor(s / 86400)), l: 'Días', cls: '' },
+      { v: pad(Math.floor(s % 86400 / 3600)), l: 'Horas', cls: '' },
+      { v: pad(Math.floor(s % 3600 / 60)), l: 'Min', cls: '' },
+      { v: pad(s % 60), l: 'Seg', cls: 'secs' }
+    ];
+    const navDefs = [
+      ['Inicio', 'M3 11l9-8 9 8M5 10v10h14V10'], ['Jornada actual', 'M3 5h18v14H3zM3 10h18M8 3v4M16 3v4', 'Abierta'],
+      ['Mis quinielas', 'M9 4h10v16H5V8zM9 4v4H5M9 13h6M9 17h4'], ['Ligas privadas', 'M17 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M10 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8M21 20v-2a4 4 0 0 0-3-3.9M16 2.1a4 4 0 0 1 0 7.8'],
+      ['Ranking', 'M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3'], ['En vivo', 'M2 12h4l3-8 4 16 3-8h6', '3'],
+      ['Resultados', 'M4 20V10M10 20V4M16 20v-7M22 20H2'], ['Ayuda', 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01']
+    ];
+    const nav = navDefs.map((d, i) => ({ label: d[0], icon: d[1], badge: d[2] || false, cls: this.state.nav === i ? 'navon' : 'navoff', go: () => this.setState({ nav: i }) }));
+    const T = [['72’', 'Everton', '1 – 2', 'Chelsea'], ['55’', 'Valencia', '0 – 0', 'Athletic'], ['Final', 'Grêmio', '2 – 1', 'Cruzeiro'], ['38’', 'Racing', '1 – 0', 'Independiente'], ['HT', 'Houston', '1 – 1', 'Dallas']];
+    const tk = T.map((t) => ({ min: t[0], home: t[1], score: t[2], away: t[3] }));
+    const ticker = tk.concat(tk, tk, tk);
+    const live = [
+      { lg: 'Inglaterra', min: '72’', home: 'Everton', score: '1 – 2', away: 'Chelsea', tag: 'Acierto', tagbg: '#C8F04A', mine: 'Visita' },
+      { lg: 'España', min: '55’', home: 'Valencia', score: '0 – 0', away: 'Athletic Bilbao', tag: 'En riesgo', tagbg: '#FF8A3D', mine: 'Visita' },
+      { lg: 'Argentina', min: '38’', home: 'Racing', score: '1 – 0', away: 'Independiente', tag: 'Acierto', tagbg: '#C8F04A', mine: 'Local' }
+    ];
+    const rank = [
+      ['1', 'Daniela R.', '1,412', '▲2'], ['2', 'Axel M. (tú)', '1,240', '▲1', true], ['3', 'Luis F.', '1,198', '▼2'], ['4', 'Mariana G.', '1,105', '—'], ['5', 'Jorge P.', '987', '▲3']
+    ].map((r) => ({ pos: r[0], name: r[1], pts: r[2], delta: r[3], ini: ini(r[1]), bg: r[4] ? 'rgba(200,240,74,.1)' : 'transparent', pc: r[0] === '1' ? '#C8F04A' : '#8FA39A', dc: r[3][0] === '▲' ? '#C8F04A' : (r[3][0] === '▼' ? '#FF8A3D' : '#8FA39A') }));
+    const stats = [
+      ['Quinielas activas', '3', 'M9 4h10v16H5V8zM9 4v4H5'], ['Aciertos esta jornada', '7 / 9', 'M20 6L9 17l-5-5'],
+      ['Posición global', '#[N.º]', 'M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z'], ['Racha', '4 jornadas', 'M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-6 0 3 2 4 3 4 0-4-1-6 0-10']
+    ].map((d, i) => ({ l: d[0], v: d[1], icon: d[2], delay: 'animation-delay: ' + (0.2 + i * 0.06).toFixed(2) + 's' }));
+    return {
+      nav: nav, ticker: ticker, clock: clock, stats: stats, matches: matches, rank: rank, live: live,
+      count: count, pct: Math.round(count / 14 * 100), revancha: this.state.revancha, total: this.state.revancha ? 20 : 15, sent: this.state.sent,
+      cta: done ? { bg: '#C8F04A', fg: '#0B1210', label: 'Enviar quiniela' } : { bg: '#22312C', fg: '#B9C8C1', label: 'Faltan ' + (14 - count) },
+      toggleRev: () => this.setState({ revancha: !this.state.revancha }),
+      random: () => { const p = {}; for (let i = 0; i < 14; i++) p[i] = 'LEV'[Math.floor(Math.random() * 3)]; this.setState({ picks: p, sent: false }); },
+      clear: () => this.setState({ picks: {}, sent: false }),
+      submit: () => { if (Object.keys(this.state.picks).length === 14) this.setState({ sent: true }); }
+    };
+  }
+}
+</script>
+</body>
+</html>
