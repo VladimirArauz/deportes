@@ -1,25 +1,30 @@
 # La Jugada — quinielas y análisis deportivo
 
 - `Main.dc.html` — inicio (quinielas). Es el diseño exportado; `support.js` y `vendor/` son su runtime.
-- `analisis.html` — **Análisis por liga**: una tabla por liga con los últimos 15 partidos de cada equipo
-  (local / visitante / neutral), goles por partido, G-E-P de local y de visita, altitud del estadio y del
-  centro de entrenamiento, zona del país y lesionados. Incluye el historial directo del partido de la semana.
-  - `js/analisis.js` — lógica y conexión a la API.
-  - `data/equipos.js` — altitudes y zonas (valores aproximados; edítalo para agregar o corregir equipos).
-- `PROMPTS.md` — prompts para pedir esta sección en la herramienta de diseño.
+- `analisis.html` — **Análisis por liga**, con pestañas **Fútbol | NFL** y datos de TheSportsDB:
+  liga, tabla de posiciones, partidos por jornada, próximos, tendencias de local y visita, cara a cara,
+  fichas de equipo (estadio, uniformes, plantilla), ficha de jugador y detalle de partido (estadísticas,
+  alineaciones, cronología, TV y marcador por cuarto en la NFL).
+  - `js/sportsdb.js` — cliente de la API: fila de consultas, caché y una función por dato.
+  - `js/sportsdb-ui.js` — pantallas y cálculos.
+  - `data/nfl.js` — divisiones de la NFL (la API no publica tabla de la NFL).
+  - `data/equipos.js` — altitudes y zonas de los equipos (valores aproximados; edítalo para agregar o corregir).
+- **`docs/API_THESPORTSDB.md` — cómo funciona la API, qué da y qué no, y dónde hacer cambios. Léelo antes
+  de pedir un dato nuevo.**
+- `PROMPTS.md` — prompts para la herramienta de diseño.
+- `PLAN_THESPORTSDB.md` — plan y prompts por fase con los que se hizo la integración.
 
-## Clave de API-Football
+## Datos
 
-1. Crea una cuenta gratis en https://dashboard.api-football.com/register y copia tu clave.
-2. Abre `analisis.html`, pega la clave y presiona **Generar tablas**.
+No necesita cuenta ni clave: usa la versión gratis de TheSportsDB. La tabla, las tendencias y los próximos
+salen completos porque se calculan con las jornadas completas. Algunas listas vienen recortadas (plantilla
+de 10 jugadores, 5 estadísticas por partido…) y la página lo avisa. Detalle en `docs/API_THESPORTSDB.md`.
 
-La clave se guarda solo en tu navegador, no en el repositorio. El plan gratis da 100 consultas al día;
-cada liga usa unas 4–6 y quedan guardadas 12 horas ("Actualizar datos" las vuelve a pedir).
-Si la API dice que tu plan no incluye la temporada, escribe una temporada permitida en el campo "Temporada".
-
-IDs útiles: Liga de Expansión MX 263 · Liga MX 262 · Ligue 1 61 · Liga Profesional Argentina 128.
+La primera vez que abres una liga tarda (una consulta cada 5 s, una por jornada jugada; Liga MX ≈ 1.5 min).
+Después todo queda guardado en el navegador y carga en segundos. "Actualizar datos" lo vuelve a pedir.
 
 ## Ver la página
 
-Sirve la carpeta (por ejemplo `python -m http.server`) y abre `http://localhost:8000/analisis.html`;
-algunos navegadores bloquean los scripts al abrir el archivo directo.
+Con XAMPP: `http://localhost/deportes/analisis.html` (la carpeta está enlazada en `/opt/lampp/htdocs/deportes`).
+También sirve `python -m http.server` en esta carpeta y abrir `http://localhost:8000/analisis.html`;
+algunos navegadores bloquean los scripts si abres el archivo directo.
