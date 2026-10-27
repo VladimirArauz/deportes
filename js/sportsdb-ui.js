@@ -212,8 +212,9 @@
       if (mio !== turno || !ctx.info) return;
       ctx.cargando = false;
       pintarTodo();
-      var n = Object.keys(ctx.partidos).length;
-      estado('Listo · ' + ctx.info.strLeague + ' ' + ctx.temp + ': ' + n + ' partidos cargados.');
+      var n = Object.keys(ctx.partidos).length, f = Object.keys(ctx.fallidas || {}).length;
+      estado((f ? 'Incompleto · ' : 'Listo · ') + ctx.info.strLeague + ' ' + ctx.temp + ': ' + n + ' partidos cargados' +
+        (f ? '; faltan ' + f + ' jornadas (ver aviso).' : '.'));
     }).catch(function (err) {
       if (mio !== turno) return;
       ctx.cargando = false;
@@ -231,17 +232,34 @@
     });
   }
 
+  // Todas las jornadas jugadas. Si una falla (corte de la API), se anota, se sigue con las demás y al
+  // final se vuelve a pedir; si aún falta, se avisa (pintarFaltan) para no mostrar una tabla incompleta
+  // como si estuviera completa.
   function cargarRondas(mio) {
     var id = ctx.id, temp = ctx.temp;
+    ctx.fallidas = {};
     var pedirRonda = function (r) {
       return S.jornada(id, temp, r).then(function (lista) {
         if (mio !== turno) return lista;
         ctx.rondas[r] = lista.length;
+        delete ctx.fallidas[r];
         agregar(lista);
         pintarTodo();
         return lista;
+      }, function (e) {
+        if (mio === turno) { ctx.fallidas[r] = 1; pintarTodo(); }
+        return null;   // null = falló (distinto de [] = jornada vacía)
       });
     };
+    var reintentar = function () {
+      return Object.keys(ctx.fallidas).map(Number).sort(function (a, b) { return a - b; }).reduce(function (p, r) {
+        return p.then(function () { return mio === turno ? pedirRonda(r) : null; });
+      }, Promise.resolve());
+    };
+    return cargarOrden(pedirRonda, mio, id, temp).then(function () { return mio === turno ? reintentar() : null; });
+  }
+
+  function cargarOrden(pedirRonda, mio, id, temp) {
     var tabla = ctx.nfl ? Promise.resolve([]) : S.tabla(id, temp).catch(function () { return []; });
     tabla = tabla.then(function (t) { if (mio === turno) ctx.oficial = t; });
 
@@ -259,9 +277,17 @@
           var orden = [ultima, ultima + 1];
           for (var i = 1; i < ultima; i++) orden.push(i);
           if (ctx.nfl) orden = orden.filter(function (x) { return x <= dep().maxRondas; });
+          ctx.jornadaActual = ultima;
+          ctx.esperadas = orden.length;
+          // Si el último partido fue uno reprogramado de una jornada vieja, `ultima` se queda corta:
+          // se sigue pidiendo mientras la jornada tenga partidos terminados (la siguiente ya está en caché).
+          var seguir = function (rr) {
+            if (mio !== turno || rr > dep().maxRondas) return null;
+            return pedirRonda(rr).then(function (l) { return l && l.some(S.terminado) ? seguir(rr + 1) : null; });
+          };
           return orden.reduce(function (p, rr) {
-            return p.then(function () { return mio === turno ? pedirRonda(rr).catch(function () { return []; }) : null; });
-          }, Promise.resolve());
+            return p.then(function () { return mio === turno ? pedirRonda(rr) : null; });
+          }, Promise.resolve()).then(function () { return seguir(ultima + 1); });
         });
     }
     return tabla.then(function () { return buscarHastaVacio(pedirRonda, mio); });
@@ -273,7 +299,8 @@
     var paso = function (r) {
       if (mio !== turno || r > max || vacias >= 2) return null;
       return pedirRonda(r).then(function (l) {
-        vacias = l.length ? 0 : vacias + 1;
+        // Una jornada que falló no cuenta como vacía: se sigue y se reintenta al final.
+        vacias = l && !l.length ? vacias + 1 : 0;
         return paso(r + 1);
       });
     };
@@ -802,6 +829,25 @@
     }).join('') + '</div><p class="nota" style="margin-top:8px">Toca un equipo para ver su ficha, estadio, uniformes y plantilla.</p>';
   }
 
+  // Progreso de la carga y jornadas que no llegaron: así nunca parece completa una tabla a medias.
+  function pintarFaltan() {
+    var f = Object.keys(ctx.fallidas || {}).map(Number).sort(function (a, b) { return a - b; });
+    var hechas = Object.keys(ctx.rondas).length, html = '';
+    if (ctx.cargando && ctx.esperadas) {
+      html = '<p class="nota">Cargando jornadas: ' + Math.min(hechas, ctx.esperadas) + ' de ' + ctx.esperadas +
+        '. La tabla se completa sola; mientras tanto no incluye todos los partidos.</p>';
+    } else if (ctx.cargando) {
+      html = '<p class="nota">Cargando jornadas: ' + hechas + ' recibidas…</p>';
+    }
+    if (f.length) {
+      html += aviso('Faltan ' + (f.length === 1 ? 'la ' + dep().ronda.toLowerCase() + ' ' : 'las ' + dep().ronda.toLowerCase() + 's ') + f.join(', ') +
+        ' porque TheSportsDB limitó las consultas. ' + (ctx.cargando ? 'Se vuelven a pedir al final.'
+          : 'Las tablas no incluyen esos partidos. <button class="ghost" data-reintentar style="margin-left:8px">Reintentar</button>'));
+    }
+    $('sdbFaltan').innerHTML = html;
+    $('sdbFaltan').hidden = !html;
+  }
+
   var pendientePintar = false;
   function pintarTodo() {
     if (pendientePintar) return;
@@ -812,6 +858,7 @@
       var ps = delTorneo();
       var filas = calcular(ps);
       ctx.filas = filas;
+      pintarFaltan();
       pintarTabla(filas.slice());
       pintarPartidos(ps, filas);
       pintarEquipos(filas);
@@ -1219,6 +1266,8 @@
     var d = t.closest('[data-desc]');
     if (d) { var p = d.previousElementSibling; var ab = p.classList.toggle('abierta'); d.textContent = ab ? 'Ver menos' : 'Ver más'; return; }
     if (!t.closest('#sdb, #sdbModal')) return;
+    // Reintentar: las jornadas que ya llegaron salen de la caché; solo se piden las que faltan.
+    if (t.closest('[data-reintentar]')) { cargar(); return; }
     var e = t.closest('[data-equipo]'); if (e) { abrirEquipo(e.getAttribute('data-equipo')); return; }
     var pa = t.closest('[data-partido]'); if (pa) { abrirPartido(pa.getAttribute('data-partido')); return; }
     var j = t.closest('[data-jugador]'); if (j) { abrirJugador(j.getAttribute('data-jugador')); return; }
