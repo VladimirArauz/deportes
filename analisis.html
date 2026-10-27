@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0B1210;--panel:#0F1916;--panel2:#12201C;--deep:#0D1613;--line:#1C2925;--line2:#22312C;--text:#EAF2EE;--soft:#B9C8C1;--muted:#8FA39A;--lima:#C8F04A;--naranja:#FF8A3D;--gris:#9DB0A7}
+:root{--bg:#0B1210;--panel:#0F1916;--panel2:#12201C;--deep:#0D1613;--line:#1C2925;--line2:#22312C;--text:#EAF2EE;--soft:#B9C8C1;--muted:#8FA39A;--lima:#C8F04A;--naranja:#FF8A3D;--gris:#9DB0A7;--verde:#3DDC84;--rojo:#FF4D4F}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;font-size:14px}
 a{color:var(--lima)}a:hover{color:#E2FF8A}
@@ -96,6 +96,20 @@ td.eq .linkeq:hover{color:var(--lima)}
 .fila-partido .loc{text-align:right}
 .fila-partido .marc{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;min-width:64px;text-align:center}
 .fila-partido img{width:20px;height:20px;object-fit:contain;vertical-align:middle;margin:0 6px}
+/* Local / Visita: verde ganó, naranja empató, rojo perdió */
+.r{color:var(--rojo);font-weight:700}
+.ult10{display:inline-flex;gap:3px}
+.ult10 i{width:20px;height:20px;border-radius:5px;font-style:normal;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;color:var(--bg)}
+.ult10 .G{background:var(--verde)}.ult10 .E{background:var(--naranja)}.ult10 .P{background:var(--rojo)}
+td.eq .abrir{width:28px;height:28px;margin-right:6px;border-radius:8px;border:1px solid var(--line2);background:transparent;color:var(--soft);cursor:pointer;vertical-align:middle}
+td.eq .abrir:hover{border-color:var(--lima);color:var(--text)}
+tr.detalle td{text-align:left;white-space:normal;background:var(--deep);padding:10px 12px}
+tr.detalle:hover{background:none}
+.fila-partido.res-G{border-left:4px solid var(--verde);background:rgba(61,220,132,.10)}
+.fila-partido.res-E{border-left:4px solid var(--naranja);background:rgba(255,138,61,.10)}
+.fila-partido.res-P{border-left:4px solid var(--rojo);background:rgba(255,77,79,.10)}
+.fila-partido .cond{color:var(--text)}
+.zona b{color:var(--text)}
 .tendencia-sel{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-bottom:12px}
 .modal{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow-y:auto}
 .modal[hidden]{display:none}
@@ -156,6 +170,13 @@ td.eq .linkeq:hover{color:var(--lima)}
         <span>Liga</span>
         <div id="sdbChips" class="chips"></div>
       </div>
+      <div class="campo" id="sdbBuscarCampo">
+        <span>Todas las ligas</span>
+        <span style="display:flex;flex-wrap:wrap;gap:8px">
+          <select id="sdbPais" class="inp" aria-label="País" style="min-width:170px"></select>
+          <select id="sdbLigaPais" class="inp" aria-label="Liga del país" style="min-width:220px" disabled></select>
+        </span>
+      </div>
       <label class="campo" id="sdbNuevaCampo">
         <span>Agregar liga por ID de TheSportsDB</span>
         <span style="display:flex;gap:8px">
@@ -187,6 +208,7 @@ td.eq .linkeq:hover{color:var(--lima)}
             <button class="chip on" data-vista="jornada" aria-pressed="true">Por jornada</button>
             <button class="chip" data-vista="proximos" aria-pressed="false">Próximos</button>
             <button class="chip" data-vista="tendencias" aria-pressed="false">Tendencias</button>
+            <button class="chip" data-vista="localvisita" aria-pressed="false">Local / Visita</button>
             <button class="chip" data-vista="h2h" aria-pressed="false">Cara a cara</button>
           </div>
         </div>
@@ -207,9 +229,11 @@ td.eq .linkeq:hover{color:var(--lima)}
     </div>
   </div>
 
-  <p class="nota">Datos: TheSportsDB (versión gratis). Se guardan en este navegador; "Actualizar datos" los vuelve a pedir. Altitudes y zonas de los equipos: archivo <code>data/equipos.js</code>, valores aproximados.</p>
+  <p class="nota">Datos: TheSportsDB (versión gratis). Se guardan en este navegador; "Actualizar datos" los vuelve a pedir. Altitudes: Open-Meteo con las coordenadas de cada estadio, o <code>data/equipos.js</code> si el equipo está ahí. Lesionados: <code>data/lesionados.js</code>, capturado a mano.</p>
 </div>
 <script src="data/equipos.js"></script>
+<script src="data/lesionados.js"></script>
+<script src="data/ligas.js"></script>
 <script src="data/nfl.js"></script>
 <script src="js/sportsdb.js"></script>
 <script src="js/sportsdb-ui.js"></script>

@@ -8,7 +8,11 @@
   - `js/sportsdb.js` — cliente de la API: fila de consultas, caché y una función por dato.
   - `js/sportsdb-ui.js` — pantallas y cálculos.
   - `data/nfl.js` — divisiones de la NFL (la API no publica tabla de la NFL).
-  - `data/equipos.js` — altitudes y zonas de los equipos (valores aproximados; edítalo para agregar o corregir).
+  - `data/equipos.js` — altitudes y zonas de los equipos (valores aproximados; mandan sobre lo calculado).
+  - `data/lesionados.js` — lesionados (bajas y en duda) por equipo, capturados a mano: la API gratis no los da.
+  - `data/ligas.js` — catálogo de ligas de fútbol por país para el buscador "Todas las ligas".
+  - Vista **Local / Visita**: G/E/P de local, visita y neutral, últimos 10 partidos en verde/naranja/rojo,
+    altitud del estadio (Open-Meteo), zona del país y lesionados.
 - **`docs/API_THESPORTSDB.md` — cómo funciona la API, qué da y qué no, y dónde hacer cambios. Léelo antes
   de pedir un dato nuevo.**
 - `PROMPTS.md` — prompts para la herramienta de diseño.

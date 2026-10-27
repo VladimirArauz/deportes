@@ -2,7 +2,28 @@
 // y del centro de entrenamiento, y zona del país. Valores aproximados.
 // `nombres` son variantes del nombre (sin acentos) para empatar con la API.
 // Para agregar un equipo, copia una línea y ajusta los valores.
+// Un alias con "=" al inicio solo vale si el nombre es exactamente ese.
 window.EQUIPOS = [
+  // ---------- México · Liga MX ----------
+  { nombres: ['=america', 'club america'], altEstadio: 2240, altEntrenamiento: 2240, zona: 'Centro' },
+  { nombres: ['cruz azul'], altEstadio: 2268, altEntrenamiento: 2250, zona: 'Centro' },
+  { nombres: ['pumas unam', '=pumas'], altEstadio: 2268, altEntrenamiento: 2300, zona: 'Centro' },
+  { nombres: ['toluca', 'deportivo toluca'], altEstadio: 2667, altEntrenamiento: 2610, zona: 'Centro' },
+  { nombres: ['pachuca'], altEstadio: 2400, altEntrenamiento: 2400, zona: 'Centro' },
+  { nombres: ['=leon', 'club leon'], altEstadio: 1815, altEntrenamiento: 1815, zona: 'Centro' },
+  { nombres: ['cd guadalajara', '=guadalajara', 'chivas'], altEstadio: 1600, altEntrenamiento: 1560, zona: 'Oeste' },
+  { nombres: ['=atlas', 'atlas fc'], altEstadio: 1566, altEntrenamiento: 1590, zona: 'Oeste' },
+  { nombres: ['=monterrey', 'cf monterrey', 'rayados'], altEstadio: 500, altEntrenamiento: 540, zona: 'Norte' },
+  { nombres: ['tigres uanl', '=tigres'], altEstadio: 520, altEntrenamiento: 520, zona: 'Norte' },
+  { nombres: ['santos laguna'], altEstadio: 1130, altEntrenamiento: 1130, zona: 'Norte' },
+  { nombres: ['necaxa'], altEstadio: 1880, altEntrenamiento: 1880, zona: 'Centro' },
+  { nombres: ['=puebla', 'club puebla'], altEstadio: 2160, altEntrenamiento: 2160, zona: 'Centro' },
+  { nombres: ['queretaro'], altEstadio: 1830, altEntrenamiento: 1830, zona: 'Centro' },
+  { nombres: ['=tijuana', 'club tijuana', 'xolos'], altEstadio: 100, altEntrenamiento: 100, zona: 'Norte' },
+  { nombres: ['=juarez', 'fc juarez'], altEstadio: 1140, altEntrenamiento: 1140, zona: 'Norte' },
+  { nombres: ['atletico de san luis', 'atletico san luis'], altEstadio: 1870, altEntrenamiento: 1870, zona: 'Centro' },
+  { nombres: ['mazatlan', 'mazatlan fc'], altEstadio: 10, altEntrenamiento: 10, zona: 'Norte' },
+
   // ---------- México · Liga de Expansión MX ----------
   { nombres: ['atlante'], altEstadio: 2240, altEntrenamiento: 2240, zona: 'Centro' },
   { nombres: ['atletico morelia', 'morelia'], altEstadio: 1920, altEntrenamiento: 1920, zona: 'Oeste' },

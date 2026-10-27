@@ -44,7 +44,12 @@ Verificado con llamadas reales el **2026-10-26**. Documentación oficial: https:
 | Ficha de jugador (posición, número, nacionalidad, edad, estatura, peso, foto) | Datos de la plantilla | Sí |
 | Jugador: estadísticas / equipos anteriores | `lookupplayerstats` / `lookupformerteams` | **No: 10 / 5. Suelen existir para NFL, casi nunca para fútbol** |
 | Jugador: palmarés, hitos, contratos | `lookuphonours`, `lookupmilestones`, `lookupcontracts` | Casi siempre vacíos |
-| Altitud y zona de cada equipo | `data/equipos.js` (datos propios, no de la API) | Solo de los equipos que estén en ese archivo |
+| Vista **Local / Visita** (G/E/P de local, visita y neutral, últimos 10 con color) | Calculada con las jornadas. Neutral = el partido no fue en la sede habitual del local (el `idVenue` más repetido en sus partidos de local) | Sí |
+| Altitud del estadio | Coordenadas del estadio (`lookupvenue` → `strMap`) + **Open-Meteo** (`api.open-meteo.com/v1/elevation`, gratis, sin clave). `data/equipos.js` tiene prioridad | Sí, si el estadio tiene `strMap` |
+| Altitud de entrenamiento | Solo `data/equipos.js`; si no está, se usa la del estadio (marcada "≈") | Solo equipos del archivo |
+| Zona dentro del país | `data/equipos.js` o calculada: coordenadas del estadio contra el centro del país (`PAISES` en `sportsdb-ui.js`) | Sí, si hay coordenadas |
+| Lesionados (bajas y en duda) | `data/lesionados.js`, **a mano** | Solo equipos capturados |
+| Catálogo "Todas las ligas" | `data/ligas.js` (IDs verificados) + `search_all_leagues` del país | El catálogo sí; la API da solo 5 por país |
 
 Cuando una lista llega al tope de la versión gratis, la página lo avisa debajo ("La versión gratis de
 TheSportsDB solo da N…").
@@ -74,7 +79,9 @@ TheSportsDB solo da N…").
 - Tabla oficial completa (solo 5 filas; por eso se calcula).
 - Historial cara a cara de muchos años de una sola vez: habría que cargar varias temporadas
   (≈ 15–40 consultas cada una).
-- Altitud de estadios: la API no la da; viene de `data/equipos.js`.
+- Altitud de estadios: la API no la da; se calcula con Open-Meteo a partir de `strMap`, o viene de `data/equipos.js`.
+- **Listar todas las ligas**: `all_leagues.php` da 50 (10 de fútbol) y `search_all_leagues.php?c=` solo
+  las 5 primeras del país en orden alfabético (en Inglaterra ni sale la Premier). Por eso existe `data/ligas.js`.
 
 ### Lo que cambiaría con la versión de pago (no usada, solo para referencia)
 Con clave Premium (≈ USD 9/mes), las mismas llamadas devuelven listas completas, hay livescore y un límite
@@ -92,7 +99,9 @@ Si algún día se quiere, basta cambiar `CLAVE` en `js/sportsdb.js` y los topes 
 | `js/sportsdb.js` | Cliente de la API → `window.SportsDB`: fila de peticiones, caché, una función por dato |
 | `js/sportsdb-ui.js` | Pantallas y cálculos: carga de jornadas, tabla, tendencias, fichas, modal |
 | `data/nfl.js` | `window.NFL_DIVISIONES`: 8 divisiones con los 32 equipos (nombres exactos de la API) |
-| `data/equipos.js` | `window.EQUIPOS`: altitud de estadio y entrenamiento, y zona (datos propios) |
+| `data/equipos.js` | `window.EQUIPOS`: altitud de estadio y entrenamiento, y zona (datos propios; mandan sobre lo calculado) |
+| `data/lesionados.js` | `window.LESIONADOS`: bajas y dudas por equipo, capturadas a mano |
+| `data/ligas.js` | `window.LIGAS`: catálogo de ligas de fútbol por país para el buscador "Todas las ligas" |
 
 ### Flujo al abrir una liga (`cargar()` en `sportsdb-ui.js`)
 1. `lookupleague` → encabezado + `strCurrentSeason` → arma el selector de temporada (actual y 4 anteriores).
@@ -146,6 +155,7 @@ Base: `https://www.thesportsdb.com/api/v1/json/123/`. "Filas" = tope con la vers
 | Endpoint | Filas | Notas |
 |---|---|---|
 | `lookupleague.php?id=` | 1 | `strCurrentSeason` (`2026` NFL, `2026-2027` fútbol europeo/MX), logo, badge, banner, trofeo, póster, fanart, redes, `strTvRights`, descripción ES/EN |
+| `search_all_leagues.php?c=&s=Soccer` | **5** | Las 5 primeras del país en orden alfabético. Nombres de país en inglés (`Mexico`, `England`, `United States`; `Europe` para UEFA, `Worldwide` para Libertadores y torneos FIFA) |
 | `search_all_seasons.php?id=` | 5 | Devuelve las **5 más antiguas**: no sirve para las recientes |
 | `lookuptable.php?l=&s=` | **5** | Sin `s` = temporada actual. `strForm`, `strDescription` (zona), `strGroup`. **NFL: vacío** |
 | `search_all_teams.php?l=` | **10** | Alfabético. Pide el nombre interno de la liga (`Mexican Primera League`, no `Mexican Liga MX`). No se usa |
@@ -196,6 +206,10 @@ Para buscar otro ID: `https://www.thesportsdb.com/api/v1/json/123/search_all_lea
 | Cambiar cuánto dura la caché | `H` en `js/sportsdb.js` |
 | Cambiar el ritmo de consultas | `ESPACIO_MS`, `ESPERAS_MS`, `ESPACIO_LENTO_MS` en `js/sportsdb.js` (bajar de 5 s provoca cortes) |
 | Agregar altitud/zona de un equipo | `data/equipos.js` |
+| Capturar lesionados | `data/lesionados.js` (y cambiar `actualizado`) |
+| Agregar una liga al buscador | `data/ligas.js` (verifica el ID con `lookupleague.php?id=`) |
+| Cambiar la regla de "neutral" | `esNeutral()` / `sedesHabituales()` en `js/sportsdb-ui.js` |
+| Corregir el centro de un país para la zona | `PAISES` en `js/sportsdb-ui.js` |
 | Otro deporte (NBA…) | Nueva entrada en `DEPORTES`, botón de pestaña en `analisis.html`, y revisar `esNfl()` (pretemporada, divisiones, grupos de posición) |
 
 ---

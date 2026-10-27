@@ -28,3 +28,26 @@ Los prompts 1–5 (API-Football) son históricos: esa parte se quitó de la pág
 
 8. **Fichas**
    > Al tocar un partido, abre un panel con el marcador (por cuarto en NFL), fecha, estadio, asistencia, enlace al video y pestañas Estadísticas (barras enfrentadas), Alineaciones, Cronología y TV. Al tocar un equipo, abre su ficha con banner, colores, estadio y pestañas Partidos, Plantilla (agrupada por posición), Estadio (foto, capacidad, mapa) y Uniformes. Al tocar un jugador, muestra su ficha con estadísticas, equipos anteriores, palmarés, hitos y contratos, y un botón para volver al equipo. Si un dato no existe, la pestaña lo dice.
+
+## Local / Visita, altitud y lesionados
+
+9. **Todas las ligas**
+   > En "Análisis", deja como ligas rápidas Liga MX, Liga de Expansión MX, Champions League, Copa
+   > Libertadores, Premier League, Serie A, Primera División de Argentina, LaLiga y Ligue 1. Agrega un
+   > buscador "Todas las ligas": eliges un país (o Europa, o Internacional) y aparecen sus ligas de fútbol
+   > para abrir cualquiera. Se mantiene el campo para agregar una liga por ID.
+
+10. **Local / Visita y últimos 10**
+   > Agrega una vista "Local / Visita" con una tabla por equipo: partidos jugados en la liga; ganados,
+   > empatados y perdidos de visitante; ganados, empatados y perdidos de local; y partidos en cancha
+   > neutral (cuando el partido no se jugó en el estadio habitual del local). Al tocar ▸ junto a un equipo,
+   > despliega sus últimos 10 partidos con rival, si fue local, visitante o neutral, el marcador y el
+   > estadio. Pinta cada partido de verde si ganó, naranja si empató y rojo si perdió. Las columnas se
+   > ordenan al tocarlas.
+
+11. **Altitud, zona y lesionados**
+   > En esa tabla, agrega la altitud sobre el nivel del mar del estadio y del lugar de entrenamiento
+   > (calculada con las coordenadas del estadio), la zona del país donde está el equipo (Norte, Sur, Este,
+   > Oeste, Centro o combinadas como Noroeste) con su ciudad, y dos columnas de lesionados: los que no
+   > jugarán y los que están en duda. Los lesionados salen de un archivo que se edita a mano, con la fecha
+   > de la última actualización.

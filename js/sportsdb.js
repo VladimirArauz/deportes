@@ -141,6 +141,14 @@
     });
   }
 
+  // Ligas de fútbol de un país. La versión gratis da solo las primeras 5 en orden alfabético,
+  // por eso el catálogo principal está en data/ligas.js.
+  function ligasPais(pais) {
+    return pedir('search_all_leagues.php?c=' + q(pais) + '&s=Soccer', H.semana, function (j) {
+      return lista(j, 'countries').map(function (l) { return { id: l.idLeague, n: l.strLeague, pais: l.strCountry }; });
+    });
+  }
+
   function tabla(id, temporada) {
     return pedir('lookuptable.php?l=' + q(id) + '&s=' + q(temporada), H.resultados, function (j) {
       return lista(j, 'table').map(function (t) {
@@ -271,6 +279,45 @@
       return r;
     });
   }
+  // strMap viene como "19°19′32.5″N 98°13′49.5″W" o como "19.32, -98.23". Devuelve [lat, lon] o null.
+  function coordenadas(s) {
+    s = String(s || '');
+    var re = /(\d+(?:\.\d+)?)\s*°\s*(?:(\d+(?:\.\d+)?)\s*['′]\s*)?(?:(\d+(?:\.\d+)?)\s*["″]\s*)?([NSEWO])/gi, m, lat = null, lon = null;
+    while ((m = re.exec(s))) {
+      var v = +m[1] + (+m[2] || 0) / 60 + (+m[3] || 0) / 3600, h = m[4].toUpperCase();
+      if (h === 'S' || h === 'W' || h === 'O') v = -v;
+      if (h === 'N' || h === 'S') lat = v; else lon = v;
+    }
+    if (lat == null || lon == null) {
+      m = /(-?\d+(?:\.\d+)?)\s*[,; ]\s*(-?\d+(?:\.\d+)?)/.exec(s.replace(/°/g, ''));
+      if (!m) return null;
+      lat = +m[1]; lon = +m[2];
+    }
+    return Math.abs(lat) <= 90 && Math.abs(lon) <= 180 ? [lat, lon] : null;
+  }
+
+  // Altitud (m s. n. m.) de varios puntos con Open-Meteo: gratis, sin clave y fuera de la fila de
+  // TheSportsDB. Cada punto se guarda sin vencimiento (la altitud no cambia).
+  var ALT = PREFIJO + 'g:alt:';
+  function altitudes(coords) {
+    var clave = function (c) { return ALT + c[0].toFixed(4) + ',' + c[1].toFixed(4); };
+    var faltan = coords.filter(function (c) { return leer(clave(c), null) == null; });
+    var listo = function () { return coords.map(function (c) { return leer(clave(c), null); }); };
+    if (!faltan.length) return Promise.resolve(listo());
+    var lotes = [];
+    for (var i = 0; i < faltan.length; i += 100) lotes.push(faltan.slice(i, i + 100));
+    return Promise.all(lotes.map(function (l) {
+      var url = 'https://api.open-meteo.com/v1/elevation?latitude=' + l.map(function (c) { return c[0].toFixed(4); }).join(',') +
+        '&longitude=' + l.map(function (c) { return c[1].toFixed(4); }).join(',');
+      return fetch(url).then(function (r) {
+        if (!r.ok) throw new Error('Open-Meteo respondió ' + r.status + '.');
+        return r.json();
+      }).then(function (j) {
+        (j.elevation || []).forEach(function (e, k) { if (e != null) guardar(clave(l[k]), Math.round(e)); });
+      });
+    })).then(listo);
+  }
+
   function uniformes(id) {
     return pedir('lookupequipment.php?id=' + q(id), H.semana, function (j) {
       return lista(j, 'equipment').map(function (x) { return { temp: x.strSeason, tipo: x.strType, img: x.strEquipment }; });
@@ -315,7 +362,7 @@
   window.SportsDB = {
     pedir: pedir, borrarCache: borrarCache,
     estaRecortado: estaRecortado, cuenta: cuenta, lista: lista, q: q, num: num, tomar: tomar, H: H,
-    liga: liga, tabla: tabla, equipos: equipos, equipo: equipo, temporada: temporada,
+    liga: liga, ligasPais: ligasPais, coordenadas: coordenadas, altitudes: altitudes, tabla: tabla, equipos: equipos, equipo: equipo, temporada: temporada,
     ultimosLiga: ultimosLiga, proximosLiga: proximosLiga, ultimosEquipo: ultimosEquipo,
     proximosEquipo: proximosEquipo, dia: dia, jornada: jornada, terminado: terminado,
     partido: partido, estadisticas: estadisticas, alineacion: alineacion, cronologia: cronologia,

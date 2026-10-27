@@ -10,8 +10,11 @@
   var DEPORTES = {
     futbol: {
       ligas: [
-        { id: '4350', n: 'Liga MX' }, { id: '4334', n: 'Ligue 1' },
-        { id: '4406', n: 'Primera División · Argentina' }, { id: '4328', n: 'Premier League' }
+        { id: '4350', n: 'Liga MX' }, { id: '4654', n: 'Liga de Expansión MX' },
+        { id: '4480', n: 'Champions League' }, { id: '4501', n: 'Copa Libertadores' },
+        { id: '4328', n: 'Premier League' }, { id: '4332', n: 'Serie A' },
+        { id: '4406', n: 'Primera División · Argentina' }, { id: '4335', n: 'LaLiga' },
+        { id: '4334', n: 'Ligue 1' }
       ],
       maxRondas: 46, ronda: 'Jornada', pts: 'goles'
     },
@@ -19,6 +22,19 @@
   };
   var PRETEMPORADA_NFL = 500;
   var HUECO_TORNEO = 30 * 86400e3;
+  var MAX_EXTRAS = 8;   // ligas agregadas que se conservan como chips
+  // Centro y tamaño aproximados (lat, lon, alto, ancho en grados) de cada país, con el nombre que usa la
+  // API, para ubicar un estadio como Norte/Sur/Este/Oeste/Centro. Si el país no está, se usa el centro de
+  // los estadios de la propia liga. data/equipos.js tiene prioridad.
+  var PAISES = {
+    Mexico: [23.6, -102.5, 18.2, 31.7], England: [52.85, -1.95, 5.9, 7.5], Spain: [39.9, -3.7, 7.8, 12.6],
+    Italy: [41.85, 12.55, 10.5, 11.9], France: [46.7, 2.4, 8.8, 13], Germany: [51.2, 10.45, 7.8, 9.1],
+    Argentina: [-38.4, -63.6, 33.2, 20], Brazil: [-14.2, -51.9, 39, 39.1], Portugal: [39.6, -8.0, 5.2, 3.3],
+    'The Netherlands': [52.15, 5.3, 2.8, 3.9], Belgium: [50.5, 4.45, 1.9, 3.9], Scotland: [56.8, -4.2, 4.2, 5.2],
+    Colombia: [4.15, -72.95, 16.7, 12.1], Chile: [-36.7, -71.2, 38, 8], Uruguay: [-32.5, -56, 4.9, 4.7],
+    Peru: [-9.2, -75, 18.4, 13.4], Ecuador: [-1.8, -78.4, 6.4, 5.8], Paraguay: [-23.4, -58.4, 7.6, 8.1],
+    Bolivia: [-16.3, -64.7, 13.2, 11.5], 'United States': [37, -95.85, 24.9, 57.9], Turkey: [39, 35.2, 6, 19]
+  };
 
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) {
@@ -72,18 +88,28 @@
       : '';
   }
 
-  // Altitud y zona de data/equipos.js: coincidencia exacta o el alias más largo contenido en el nombre.
-  var EXTRA = (window.EQUIPOS || []).map(function (e) { return { e: e, nombres: e.nombres.map(normalizar) }; });
-  function datosPropios(nombre) {
-    var n = normalizar(nombre), mejor = null, largo = 0;
-    EXTRA.forEach(function (x) {
-      x.nombres.forEach(function (al) {
-        if (al === n) { mejor = x.e; largo = 1e9; }
-        else if ((' ' + n + ' ').indexOf(' ' + al + ' ') >= 0 && al.length > largo) { mejor = x.e; largo = al.length; }
-      });
+  // Datos propios por equipo (data/equipos.js, data/lesionados.js): coincidencia exacta o el alias
+  // más largo contenido en el nombre. Un alias con "=" al inicio solo vale exacto ('=america' no toma
+  // "America de Cali").
+  function porNombre(lista) {
+    var xs = (lista || []).map(function (e) {
+      return { e: e, nombres: e.nombres.map(function (al) { return { t: normalizar(al), exacto: al.charAt(0) === '=' }; }) };
     });
-    return mejor;
+    return function (nombre) {
+      var n = normalizar(nombre), mejor = null, largo = 0;
+      xs.forEach(function (x) {
+        x.nombres.forEach(function (o) {
+          var al = o.t;
+          if (al === n) { mejor = x.e; largo = 1e9; }
+          else if (!o.exacto && (' ' + n + ' ').indexOf(' ' + al + ' ') >= 0 && al.length > largo) { mejor = x.e; largo = al.length; }
+        });
+      });
+      return mejor;
+    };
   }
+  var datosPropios = porNombre(window.EQUIPOS);
+  var LES = window.LESIONADOS || { equipos: [] };
+  var lesionados = porNombre(LES.equipos);
 
   // ---------- estado ----------
   var est = {
@@ -129,6 +155,7 @@
     });
     $('sdbNuevaCampo').hidden = esNfl();
     $('sdbLigasCampo').hidden = esNfl();
+    $('sdbBuscarCampo').hidden = esNfl();
     var id = idLiga();
     $('sdbChips').innerHTML = ligasDe(est.dep).map(function (l) {
       var on = l.id === id;
@@ -161,7 +188,7 @@
     guardar('sdb:liga', est.liga);
     pintarDeporte();
     pintarVistas();
-    ctx = { id: id, partidos: {}, rondas: {}, oficial: [], torneo: null, cargando: true, nfl: esNfl() };
+    ctx = { id: id, partidos: {}, rondas: {}, oficial: [], torneo: null, cargando: true, nfl: esNfl(), geo: null, abiertos: {} };
     $('sdbLiga').innerHTML = '<div class="cargando">Cargando liga…</div>';
     $('sdbTabla').innerHTML = $('sdbPartidos').innerHTML = $('sdbEquipos').innerHTML = '';
     $('sdbTablaNota').textContent = '';
@@ -288,17 +315,39 @@
 
   function nuevoRegistro(id, nombre, escudo) {
     var z = function () { return { pj: 0, g: 0, e: 0, p: 0, gf: 0, gc: 0 }; };
-    return { id: id, eq: nombre, escudo: escudo, pj: 0, g: 0, e: 0, p: 0, gf: 0, gc: 0, L: z(), V: z(), res: [] };
+    return { id: id, eq: nombre, escudo: escudo, pj: 0, g: 0, e: 0, p: 0, gf: 0, gc: 0, L: z(), V: z(), N: z(), res: [] };
   }
+
+  // Sede habitual de cada equipo: el estadio donde más veces jugó de local en la temporada cargada.
+  function sedesHabituales() {
+    var n = Object.keys(ctx.partidos).length;
+    if (ctx.hab && ctx.hab.n === n) return ctx.hab.s;
+    var cuenta = {}, s = {};
+    lista().forEach(function (p) {
+      if (!p.idSede) return;
+      var c = cuenta[p.h] || (cuenta[p.h] = {});
+      c[p.idSede] = (c[p.idSede] || 0) + 1;
+    });
+    Object.keys(cuenta).forEach(function (eq) {
+      var c = cuenta[eq];
+      s[eq] = Object.keys(c).sort(function (x, y) { return c[y] - c[x]; })[0];
+    });
+    ctx.hab = { n: n, s: s };
+    return s;
+  }
+  // Neutral: el partido no se jugó en la sede habitual del local (final a partido único, estadio prestado…).
+  function esNeutral(p, hab) { return !!(p.idSede && hab[p.h] && p.idSede !== hab[p.h]); }
+  function jugado(p) { return S.terminado(p) && p.hG != null && p.aG != null; }
 
   // Tabla y tendencias de todos los equipos con los partidos terminados.
   function calcular(ps) {
-    var eqs = {};
+    var eqs = {}, hab = sedesHabituales();
     var reg = function (id, n, e) { return eqs[id] || (eqs[id] = nuevoRegistro(id, n, e)); };
     ps.forEach(function (p) {
       var h = reg(p.h, p.hN, p.hE), a = reg(p.a, p.aN, p.aE);
-      if (!S.terminado(p) || p.hG == null || p.aG == null) return;
-      [[h, p.hG, p.aG, 'L'], [a, p.aG, p.hG, 'V']].forEach(function (x) {
+      if (!jugado(p)) return;
+      var n = esNeutral(p, hab);
+      [[h, p.hG, p.aG, n ? 'N' : 'L'], [a, p.aG, p.hG, n ? 'N' : 'V']].forEach(function (x) {
         var r = x[0], gf = x[1], gc = x[2], lado = r[x[3]];
         var res = gf > gc ? 'G' : gf < gc ? 'P' : 'E';
         [r, lado].forEach(function (o) { o.pj++; o.gf += gf; o.gc += gc; o[res.toLowerCase()]++; });
@@ -323,9 +372,20 @@
     });
   }
 
+  // Últimos 10 partidos terminados del equipo en toda la temporada cargada (sin importar el torneo
+  // elegido, para que Apertura y Clausura juntos completen 10). El más reciente primero.
+  function ultimos10(id) {
+    var hab = sedesHabituales();
+    return lista().filter(function (p) { return jugado(p) && (p.h === id || p.a === id); })
+      .slice(-10).reverse().map(function (p) {
+        var local = p.h === id, gf = local ? p.hG : p.aG, gc = local ? p.aG : p.hG;
+        return { p: p, cond: esNeutral(p, hab) ? 'N' : local ? 'L' : 'V', r: gf > gc ? 'G' : gf < gc ? 'P' : 'E' };
+      });
+  }
+
   // ---------- tablas ordenables ----------
-  // cols: [{k, t, v(fila) -> valor para ordenar, h(fila) -> html, cls}]
-  function tablaOrdenable(cont, cols, filas, orden, extraFila) {
+  // cols: [{k, t, v(fila) -> valor para ordenar, h(fila) -> html, cls}]. alPintar(cont) corre tras cada pintado.
+  function tablaOrdenable(cont, cols, filas, orden, extraFila, alPintar) {
     filas.sort(function (x, y) {
       var c = cols.filter(function (cc) { return cc.k === orden.k; })[0];
       var a = c.v(x), b = c.v(y);
@@ -348,9 +408,10 @@
     cont.querySelectorAll('thead th').forEach(function (el) {
       el.addEventListener('click', function () {
         var k = el.getAttribute('data-k');
-        tablaOrdenable(cont, cols, filas, { k: k, asc: orden.k === k ? !orden.asc : k === 'eq', desempate: orden.desempate }, extraFila);
+        tablaOrdenable(cont, cols, filas, { k: k, asc: orden.k === k ? !orden.asc : k === 'eq', desempate: orden.desempate }, extraFila, alPintar);
       });
     });
+    if (alPintar) alPintar(cont);
   }
 
   function celdaEquipo(f) {
@@ -495,6 +556,7 @@
       return;
     }
     if (v === 'tendencias') return pintarTendencias(cont, filas);
+    if (v === 'localvisita') return pintarLocalVisita(cont, filas);
     if (v === 'h2h') return pintarH2H(cont, filas);
   }
 
@@ -531,6 +593,168 @@
     ];
     cont.innerHTML = '<div></div><p class="nota" style="margin-top:8px">Promedios en ' + u + ' por partido. Racha: 3G = tres victorias seguidas. Toca una columna para ordenar.</p>';
     tablaOrdenable(cont.firstChild, cols, filas.slice(), { k: 'gfp', asc: false });
+  }
+
+  // ---------- Local / Visita: estadios, altitud y zona ----------
+  // Se piden solo al abrir esta vista y con la liga ya cargada: un lookupvenue por equipo (caché 7 días;
+  // si el equipo no tiene partidos de local, antes un lookupteam) y una sola consulta a Open-Meteo.
+  function cargarGeo() {
+    if (ctx.geo || ctx.cargando) return;
+    var mio = turno, hab = sedesHabituales();
+    var ids = (ctx.filas || []).map(function (f) { return f.id; });
+    ctx.geo = {};
+    ctx.geoListo = false;
+    ids.reduce(function (pr, id) {
+      return pr.then(function () {
+        if (mio !== turno) return;
+        var sede = hab[id] ? Promise.resolve(hab[id]) : S.equipo(id).then(function (t) { return t && t.idVenue; });
+        return sede.then(function (idV) { return idV ? S.estadio(idV) : null; }).then(function (e) {
+          if (mio !== turno) return;
+          ctx.geo[id] = e ? { sede: e.strVenue, ciudad: e.strLocation, pais: e.strCountry, c: S.coordenadas(e.strMap) } : {};
+          pintarTodo();
+        }).catch(function () { if (mio === turno) ctx.geo[id] = {}; });
+      });
+    }, Promise.resolve()).then(function () {
+      if (mio !== turno) return;
+      var con = ids.filter(function (id) { return ctx.geo[id] && ctx.geo[id].c; });
+      return S.altitudes(con.map(function (id) { return ctx.geo[id].c; })).then(function (alts) {
+        con.forEach(function (id, k) { ctx.geo[id].alt = alts[k]; });
+      });
+    }).catch(function (e) { ctx.geoError = e.message; }).then(function () {
+      if (mio !== turno) return;
+      ctx.geoListo = true;
+      pintarTodo();
+    });
+  }
+
+  // Centro del país (tabla PAISES) o, si no está, de los estadios de la liga cuando todos son del mismo país.
+  function centroDe(pais) {
+    if (PAISES[pais]) return PAISES[pais];
+    var cs = Object.keys(ctx.geo || {}).map(function (k) { return ctx.geo[k]; })
+      .filter(function (g) { return g.c && g.pais === pais; }).map(function (g) { return g.c; });
+    if (cs.length < 4) return null;
+    var med = function (xs) { xs = xs.slice().sort(function (a, b) { return a - b; }); return xs[xs.length >> 1]; };
+    var lat = cs.map(function (c) { return c[0]; }), lon = cs.map(function (c) { return c[1]; });
+    return [med(lat), med(lon), Math.max(1, Math.max.apply(null, lat) - Math.min.apply(null, lat)),
+      Math.max(1, Math.max.apply(null, lon) - Math.min.apply(null, lon))];
+  }
+  function zonaCalculada(g) {
+    var c = g && g.c && centroDe(g.pais);
+    if (!c) return '';
+    var dn = (g.c[0] - c[0]) / c[2], de = (g.c[1] - c[1]) / c[3], u = 0.12;
+    var ns = dn > u ? 'N' : dn < -u ? 'S' : '', eo = de > u ? 'E' : de < -u ? 'O' : '';
+    return { N: 'Norte', S: 'Sur', E: 'Este', O: 'Oeste', NE: 'Noreste', NO: 'Noroeste', SE: 'Sureste', SO: 'Suroeste', '': 'Centro' }[ns + eo];
+  }
+
+  // Altitudes, zona y lesionados de un equipo. data/equipos.js manda sobre lo calculado.
+  function geoEquipo(f) {
+    var x = datosPropios(f.eq) || {}, g = (ctx.geo || {})[f.id] || {};
+    var est = x.altEstadio != null ? x.altEstadio : g.alt;
+    return {
+      altEst: est, altEnt: x.altEntrenamiento != null ? x.altEntrenamiento : est,
+      entAprox: x.altEntrenamiento == null && est != null,
+      zona: x.zona || zonaCalculada(g), ciudad: g.ciudad || '', pais: g.pais || '', sede: g.sede || '',
+      pendiente: !ctx.geoListo && x.altEstadio == null
+    };
+  }
+
+  function celdaLes(nombres) {
+    if (!nombres) return '<span class="nota">—</span>';
+    if (!nombres.length) return '0';
+    return '<b title="' + esc(nombres.join(', ')) + '">' + nombres.length + '</b>';
+  }
+  var COND = { L: 'Local', V: 'Visitante', N: 'Neutral' };
+  function celdaUlt10(xs) {
+    return '<span class="ult10" title="El más reciente a la izquierda">' + xs.map(function (x) {
+      return '<i class="' + x.r + '" title="' + esc(x.p.hN + ' ' + x.p.hG + '–' + x.p.aG + ' ' + x.p.aN + ' · ' + COND[x.cond] + ' · ' + fecha(x.p.ts)) + '">' + x.cond + '</i>';
+    }).join('') + '</span>';
+  }
+  function filaUltimo(x) {
+    var p = x.p;
+    return '<button class="fila-partido res-' + x.r + '" data-partido="' + esc(p.id) + '">' +
+      '<small>' + esc(fecha(p.ts)) + '<br><b class="cond">' + COND[x.cond] + '</b>' + (p.sede ? ' · ' + esc(p.sede) : '') + '</small>' +
+      '<span class="loc">' + esc(p.hN) + img(chica(p.hE)) + '</span>' +
+      '<span class="marc">' + p.hG + ' – ' + p.aG + '</span>' +
+      '<span>' + img(chica(p.aE)) + esc(p.aN) + '</span></button>';
+  }
+
+  function pintarLocalVisita(cont, filas) {
+    filas = filas.filter(function (f) { return f.pj; });
+    if (!filas.length) { cont.innerHTML = vacio('Todavía no hay partidos terminados.'); return; }
+    cargarGeo();
+    var previo = cont.querySelector('.tabla-scroll'), scroll = previo ? previo.scrollLeft : 0;
+    filas.forEach(function (f) { f.geo = geoEquipo(f); f.ult = ultimos10(f.id); f.les = lesionados(f.eq); });
+    var m = function (v, aprox) { return v == null ? '—' : (aprox ? '≈ ' : '') + miles(v) + ' m'; };
+    var n = function (o, k, cls) { return '<span class="' + cls + '">' + o[k] + '</span>'; };
+    var num = function (v) { return v == null ? -1 : v; };
+    var cols = [
+      { k: 'eq', t: 'Equipo', cls: 'eq', v: function (f) { return f.eq; }, h: function (f) {
+        return '<button class="abrir" data-ult10="' + esc(f.id) + '" aria-expanded="' + !!ctx.abiertos[f.id] + '" aria-label="Últimos 10 de ' + esc(f.eq) + '">' + (ctx.abiertos[f.id] ? '▾' : '▸') + '</button>' + celdaEquipo(f);
+      } },
+      { k: 'pj', t: 'PJ', v: function (f) { return f.pj; }, h: function (f) { return f.pj; } },
+      { k: 'vg', t: 'Vis G', cls: 'sep', v: function (f) { return f.V.g; }, h: function (f) { return n(f.V, 'g', 'g'); } },
+      { k: 've', t: 'Vis E', v: function (f) { return f.V.e; }, h: function (f) { return n(f.V, 'e', 'e'); } },
+      { k: 'vp', t: 'Vis P', v: function (f) { return f.V.p; }, h: function (f) { return n(f.V, 'p', 'r'); } },
+      { k: 'lg', t: 'Loc G', cls: 'sep', v: function (f) { return f.L.g; }, h: function (f) { return n(f.L, 'g', 'g'); } },
+      { k: 'le', t: 'Loc E', v: function (f) { return f.L.e; }, h: function (f) { return n(f.L, 'e', 'e'); } },
+      { k: 'lp', t: 'Loc P', v: function (f) { return f.L.p; }, h: function (f) { return n(f.L, 'p', 'r'); } },
+      { k: 'neu', t: 'Neutral G-E-P', cls: 'sep', v: function (f) { return f.N.pj; }, h: function (f) {
+        return f.N.pj ? n(f.N, 'g', 'g') + '-' + n(f.N, 'e', 'e') + '-' + n(f.N, 'p', 'r') : '<span class="nota">0</span>';
+      } },
+      { k: 'ult', t: 'Últimos 10', v: function (f) { return f.ult.filter(function (x) { return x.r === 'G'; }).length; }, h: function (f) { return celdaUlt10(f.ult); } },
+      { k: 'alte', t: 'Alt. estadio', cls: 'sep', v: function (f) { return num(f.geo.altEst); }, h: function (f) {
+        return f.geo.altEst == null && f.geo.pendiente ? '…' : m(f.geo.altEst);
+      } },
+      { k: 'altn', t: 'Alt. entreno', v: function (f) { return num(f.geo.altEnt); }, h: function (f) {
+        return f.geo.altEnt == null && f.geo.pendiente ? '…' : '<span title="' + (f.geo.entAprox ? 'Sin dato del centro de entrenamiento: se usa la del estadio' : 'data/equipos.js') + '">' + m(f.geo.altEnt, f.geo.entAprox) + '</span>';
+      } },
+      { k: 'zona', t: 'Zona · ciudad', v: function (f) { return f.geo.zona + f.geo.ciudad; }, h: function (f) {
+        var g = f.geo, lugar = [g.ciudad, ctx.info.strCountry !== g.pais ? g.pais : ''].filter(Boolean).join(', ');
+        if (!g.zona && !lugar) return g.pendiente ? '…' : '—';
+        return '<span class="zona" title="' + esc(g.sede) + '"><b>' + esc(g.zona || '—') + '</b>' + (lugar ? ' · ' + esc(lugar) : '') + '</span>';
+      } },
+      { k: 'bajas', t: 'Bajas', cls: 'sep', v: function (f) { return f.les ? f.les.bajas.length : -1; }, h: function (f) { return celdaLes(f.les && f.les.bajas); } },
+      { k: 'duda', t: 'En duda', v: function (f) { return f.les ? f.les.duda.length : -1; }, h: function (f) { return celdaLes(f.les && f.les.duda); } }
+    ];
+    var faltan = (ctx.filas || []).length - Object.keys(ctx.geo || {}).length;
+    var progreso = ctx.geoListo ? (ctx.geoError ? ' No se pudieron calcular altitudes: ' + esc(ctx.geoError) : '')
+      : ' Buscando estadios y altitudes… faltan ' + Math.max(0, faltan) + ' equipos (solo la primera vez).';
+    cont.innerHTML = '<div></div><p class="nota" style="margin-top:8px">' +
+      '<b class="g">Verde</b> ganó · <b class="e">naranja</b> empató · <b class="r">rojo</b> perdió. L = local, V = visitante, ' +
+      'N = neutral (no se jugó en el estadio habitual del local; no cuenta en local ni en visita). Toca ▸ para ver los últimos 10 partidos ' +
+      '(de toda la temporada ' + esc(ctx.temp) + '). Altitud del estadio con Open-Meteo según sus coordenadas en TheSportsDB; ' +
+      'los valores de data/equipos.js tienen prioridad. Zona: posición del estadio dentro de su país.' +
+      ' Lesionados: data/lesionados.js, capturado a mano' + (LES.actualizado ? ' (actualizado el ' + esc(LES.actualizado) + ')' : '') +
+      '; "—" = sin datos de ese equipo.' + progreso + '</p>';
+    var orden = ctx.lvOrden || { k: 'pj', asc: false };
+    tablaOrdenable(cont.firstChild, cols, filas.slice(), orden, null, function (c) {
+      var th = c.querySelector('th.orden');
+      if (th) ctx.lvOrden = { k: th.getAttribute('data-k'), asc: th.getAttribute('aria-sort') === 'ascending' };
+      c.querySelectorAll('[data-ult10]').forEach(function (b) {
+        var id = b.getAttribute('data-ult10');
+        if (ctx.abiertos[id]) b.closest('tr').insertAdjacentHTML('afterend', filaDetalle(filas, id, cols.length));
+      });
+      var sc = c.querySelector('.tabla-scroll');
+      if (sc && scroll) sc.scrollLeft = scroll;
+    });
+    cont.firstChild.addEventListener('click', function (ev) {
+      var b = ev.target.closest('[data-ult10]');
+      if (!b) return;
+      var id = b.getAttribute('data-ult10'), tr = b.closest('tr');
+      ctx.abiertos[id] = !ctx.abiertos[id];
+      b.textContent = ctx.abiertos[id] ? '▾' : '▸';
+      b.setAttribute('aria-expanded', ctx.abiertos[id]);
+      if (ctx.abiertos[id]) tr.insertAdjacentHTML('afterend', filaDetalle(filas, id, cols.length));
+      else if (tr.nextElementSibling && tr.nextElementSibling.classList.contains('detalle')) tr.nextElementSibling.remove();
+    });
+  }
+
+  function filaDetalle(filas, id, ncols) {
+    var f = filas.filter(function (x) { return x.id === id; })[0];
+    if (!f) return '';
+    return '<tr class="detalle"><td colspan="' + ncols + '"><div class="partidos">' + f.ult.map(filaUltimo).join('') + '</div>' +
+      (f.ult.length < 10 ? '<p class="nota" style="margin-top:6px">Solo ' + f.ult.length + ' partidos terminados en la temporada ' + esc(ctx.temp) + '.</p>' : '') +
+      '</td></tr>';
   }
 
   function pintarH2H(cont, filas) {
@@ -923,21 +1147,54 @@
     cargar();
   });
 
-  $('sdbAgregar').addEventListener('click', function () {
-    var id = String(parseInt($('sdbNueva').value, 10) || '');
-    if (!id) return;
-    if (ligasDe('futbol').some(function (l) { return l.id === id; })) { estado('Esa liga ya está en la lista.'); return; }
+  // Abre una liga de fútbol por ID; si no está en los chips la agrega (se conservan las últimas MAX_EXTRAS).
+  function abrirLiga(id) {
+    est.dep = 'futbol';
+    guardar('sdb:dep', est.dep);
+    if (ligasDe('futbol').some(function (l) { return l.id === id; })) { est.liga.futbol = id; cargar(); return Promise.resolve(); }
     estado('Buscando la liga ' + id + '…');
-    S.liga(id).then(function (l) {
+    return S.liga(id).then(function (l) {
       if (!l) throw new Error('TheSportsDB no tiene la liga ' + id + '.');
       if (l.strSport !== 'Soccer') throw new Error(l.strLeague + ' no es de fútbol (' + l.strSport + ').');
       est.extras.push({ id: id, n: l.strLeague });
+      est.extras = est.extras.slice(-MAX_EXTRAS);
       guardar('sdb:extras', est.extras);
-      $('sdbNueva').value = '';
       est.liga.futbol = id;
       cargar();
-    }).catch(function (e) { estado('No se pudo agregar: ' + e.message); });
+    }).catch(function (e) { estado('No se pudo abrir la liga: ' + e.message); });
+  }
+
+  $('sdbAgregar').addEventListener('click', function () {
+    var id = String(parseInt($('sdbNueva').value, 10) || '');
+    if (!id) return;
+    abrirLiga(id).then(function () { $('sdbNueva').value = ''; });
   });
+
+  // Buscador "Todas las ligas": catálogo de data/ligas.js + lo que devuelva la API para el país
+  // (la versión gratis da solo 5 por país, por eso el catálogo).
+  var CATALOGO = window.LIGAS || [];
+  $('sdbPais').innerHTML = '<option value="">Elige un país…</option>' + CATALOGO.map(function (c, i) {
+    return '<option value="' + i + '">' + esc(c.pais) + '</option>';
+  }).join('');
+  $('sdbPais').addEventListener('change', function () {
+    var sel = $('sdbLigaPais'), c = CATALOGO[this.value];
+    sel.disabled = !c;
+    if (!c) { sel.innerHTML = ''; return; }
+    var pintar = function (ls) {
+      sel.innerHTML = '<option value="">Elige una liga…</option>' + ls.map(function (l) {
+        return '<option value="' + esc(l.id) + '">' + esc(l.n) + '</option>';
+      }).join('');
+    };
+    pintar(c.ligas);
+    if (!c.c) return;
+    S.ligasPais(c.c).then(function (api) {
+      if (CATALOGO[$('sdbPais').value] !== c) return;
+      var ya = {};
+      c.ligas.forEach(function (l) { ya[l.id] = 1; });
+      pintar(c.ligas.concat(api.filter(function (l) { return !ya[l.id] && !/^_/.test(l.n); })));
+    }).catch(function () { /* queda el catálogo */ });
+  });
+  $('sdbLigaPais').addEventListener('change', function () { if (this.value) abrirLiga(this.value); });
 
   $('sdbTemporada').addEventListener('change', function () {
     est.temp[idLiga()] = this.value;
