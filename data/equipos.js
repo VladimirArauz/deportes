@@ -47,6 +47,7 @@ window.EQUIPOS = [
   { nombres: ['tritones vallarta'], altEstadio: 10, altEntrenamiento: 10, zona: 'Oeste' },
   { nombres: ['mazorqueros'], altEstadio: 1510, altEntrenamiento: 1510, zona: 'Oeste' },
   { nombres: ['alacranes de durango', 'durango'], altEstadio: 1890, altEntrenamiento: 1890, zona: 'Norte' },
+  { nombres: ['piratas', 'piratas fc', 'piratas de veracruz'], altEstadio: 10, altEntrenamiento: 10, zona: 'Este' },
 
   // ---------- Francia · Ligue 1 ----------
   { nombres: ['paris saint germain', 'psg'], altEstadio: 35, altEntrenamiento: 30, zona: 'Norte' },
