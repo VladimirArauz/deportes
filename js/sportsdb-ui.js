@@ -840,7 +840,7 @@
       html = '<p class="nota">Cargando jornadas: ' + hechas + ' recibidas…</p>';
     }
     if (f.length) {
-      html += aviso('Faltan ' + (f.length === 1 ? 'la ' + dep().ronda.toLowerCase() + ' ' : 'las ' + dep().ronda.toLowerCase() + 's ') + f.join(', ') +
+      html += aviso((f.length === 1 ? 'Falta la ' + dep().ronda.toLowerCase() + ' ' : 'Faltan las ' + dep().ronda.toLowerCase() + 's ') + f.join(', ') +
         ' porque TheSportsDB limitó las consultas. ' + (ctx.cargando ? 'Se vuelven a pedir al final.'
           : 'Las tablas no incluyen esos partidos. <button class="ghost" data-reintentar style="margin-left:8px">Reintentar</button>'));
     }
